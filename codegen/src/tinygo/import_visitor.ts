@@ -89,7 +89,7 @@ export class ImportVisitor extends BaseVisitor {
       "github.com/nanobus/iota/go/wasmrs/proxy"\n`);
     sortedImports.forEach((i) => this.write(`"${i}"\n`));
     this.write(`"github.com/nanobus/iota/go/wasmrs/transform"\n`);
-    this.write(`msgpack "github.com/wapc/tinygo-msgpack"
+    this.write(`"github.com/nanobus/iota/go/msgpack"
     )\n\n`);
 
     const importedFuncs = Object.values(ns.functions).filter((f) =>

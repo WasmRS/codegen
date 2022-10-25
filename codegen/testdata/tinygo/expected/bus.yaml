@@ -1,0 +1,90 @@
+# json, msgpack, and xml are built-in codecs.
+# Configure others here.
+codecs:
+  # avro:
+  #   type: confluentavro
+  #   with:
+  #     schemaRegistryURLs:
+  #       - http://localhost:8081
+
+inputBindings:
+  # - binding: twitter
+  #   codec: json
+  #   function: handleTweet
+
+subscriptions:
+  # - pubsub: pubsub
+  #   topic: mytopic
+  #   codec: json
+
+resiliency:
+  retries:
+    events:
+      policy: constant
+      duration: 3s
+
+    # database:
+    #   policy: constant
+    #   duration: 3s
+    #
+    # publish:
+    #   policy: constant
+    #   duration: 3s
+
+  circuitBreakers:
+    # database:
+    #   policy: constant
+    #   duration: 3s
+    #
+    # publish:
+    #   maxRequests: 2
+    #   timeout: 30s
+
+services:
+    # shorten:
+    #   name: Shorten a URL and return a generated identifier.
+    #   steps:
+
+    lookup:
+      name: Return the URL using the generated identifier.
+      steps:
+
+
+events:
+
+providers:
+  'urlshortener.v1.Repository':
+    loadById:
+      name: Load the URL by its identifier.
+      steps:
+        # - name: Get state
+        #   uses: '@dapr/get_state'
+        #   with:
+        #     store: statestore
+        #     key: input.id
+        #   retry: database
+        #   circuitBreaker: database
+
+    loadByURL:
+      name: Load the ID by its URL.
+      steps:
+        # - name: Get state
+        #   uses: '@dapr/get_state'
+        #   with:
+        #     store: statestore
+        #     key: input.id
+        #   retry: database
+        #   circuitBreaker: database
+
+    storeURL:
+      name: Store a URL and its identifier.
+      steps:
+        # - name: Save state
+        #   uses: '@dapr/set_state'
+        #   with:
+        #     store: statestore
+        #     items:
+        #       - key: input.id
+        #   retry: database
+        #   circuitBreaker: database
+

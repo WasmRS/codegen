@@ -24,3 +24,8 @@ export * from "./main_visitor";
 export * from "./register_visitor";
 export * from "./wrappers_visitor";
 export * from "./utilities";
+export * from "./msgpack_visitor.js";
+export * from "./msgpack_constants.js";
+export * from "./msgpack_decoder_visitor.js";
+export * from "./msgpack_encoder_visitor.js";
+export * from "./msgpack_helpers.js";
