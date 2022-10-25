@@ -1,0 +1,9 @@
+/node_modules
+/dist
+docs
+coverage
+/testdata/*/actual/*
+
+!/testdata/*/actual/go.*
+!/testdata/*/actual/package.*
+!/testdata/*/actual/requirements.txt

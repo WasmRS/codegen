@@ -1,0 +1,16 @@
+module {{.module}}
+
+go 1.19
+
+require (
+	github.com/nanobus/iota/go/wasmrs main
+	github.com/nanobus/iota/go/msgpack main
+	github.com/google/uuid v1.3.0
+)
+
+require golang.org/x/exp v0.0.0-20221019170559-20944726eadf // indirect
+
+replace (
+	github.com/WasmRS/wasmrs-go => ../../../../WasmRS/wasmrs-go
+	github.com/google/uuid v1.3.0 => github.com/nanobus/iota/go/types/uuid v0.0.0-20221021184038-cfc4d561394c
+)

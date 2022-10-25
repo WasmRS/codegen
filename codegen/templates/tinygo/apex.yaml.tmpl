@@ -1,0 +1,30 @@
+spec: spec.apexlang
+config:
+  package: {{.package}}
+  module: {{.module}}
+generates:
+  cmd/main.go:
+    ifNotExists: false
+    module: '@nanobus/codegen/tinygo'
+    visitorClass: MainVisitor
+    config:
+      import: {{.module}}/pkg/{{.package}}
+  pkg/{{.package}}/msgpack.go:
+    module: '@apexlang/codegen/go'
+    visitorClass: MsgPackVisitor
+  pkg/{{.package}}/interfaces.go:
+    module: '@nanobus/codegen/tinygo'
+    visitorClass: InterfacesVisitor
+  pkg/{{.package}}/export.go:
+    module: '@nanobus/codegen/tinygo'
+    visitorClass: ExportVisitor
+  pkg/{{.package}}/import.go:
+    module: '@nanobus/codegen/tinygo'
+    visitorClass: ImportVisitor
+  pkg/{{.package}}/service.go:
+    ifNotExists: true
+    module: '@apexlang/codegen/go'
+    visitorClass: ScaffoldVisitor
+    config:
+      types:
+        - service
