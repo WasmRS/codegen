@@ -202,7 +202,7 @@ class ProvidersVisitor extends BaseVisitor {
       this.write(`        # - name: Publish event
         #   uses: '@dapr/publish_message'
         #   with:
-        #     pubsub: pubsub
+        #     resource: pubsub
         #     topic: mytopic
         #     codec: cloudevents+json
         #     key: input.id
@@ -221,7 +221,7 @@ class ProvidersVisitor extends BaseVisitor {
       this.write(`        # - name: Get state
         #   uses: '@dapr/get_state'
         #   with:
-        #     store: statestore
+        #     resource: statestore
         #     key: input.id
         #   retry: database
         #   circuitBreaker: database\n\n`);
@@ -229,7 +229,7 @@ class ProvidersVisitor extends BaseVisitor {
       this.write(`        # - name: Save state
         #   uses: '@dapr/set_state'
         #   with:
-        #     store: statestore
+        #     resource: statestore
         #     items:
         #       - key: input.id
         #   retry: database
