@@ -25,20 +25,18 @@ import {
 
 export class BusVisitor extends BaseVisitor {
   visitNamespaceBefore(context: Context): void {
-    const computeType = context.config.computeType || 'rsocket';
-    if (computeType == 'wapc') {
-      this.write(`compute:
-  type: wapc
-  with:
-    filename: build/release.wasm
-\n`);
-    } else if (computeType != 'rsocket') {
-      this.write(`compute:
-  type: ${computeType}
-\n`);
-    }
+    const wasmName = context.config.name;
+    this.write(`compute:
+  - uses: wasmrs
+    with:
+      filename: build/${wasmName}.wasm
 
-    this.write(`# json, msgpack, and xml are built-in codecs.
+specs:
+  - uses: apex
+    with:
+      filename: apex.aidl
+
+# json, msgpack, and xml are built-in codecs.
 # Configure others here.
 codecs:
   # avro:
