@@ -25,11 +25,26 @@ import {
 
 export class BusVisitor extends BaseVisitor {
   visitNamespaceBefore(context: Context): void {
-    const wasmName = context.config.name;
-    this.write(`compute:
+    const appName = context.config.name;
+    this.write(`application:
+  id: ${appName}
+  version: 0.0.1
+  environment: local
+
+transports:
+  rest:
+    uses: rest
+    with:
+      address: :8080
+  httprpc:
+    uses: httprpc
+    with:
+      address: :9090
+
+compute:
   - uses: wasmrs
     with:
-      filename: build/${wasmName}.wasm
+      filename: build/${appName}.wasm
 
 specs:
   - uses: apex
