@@ -28,3 +28,7 @@ generates:
     config:
       types:
         - service
+  bus.yaml:
+    ifNotExists: true
+    module: '@nanobus/bus'
+    visitorClass: BusVisitor
