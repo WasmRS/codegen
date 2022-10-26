@@ -5,25 +5,25 @@ config:
 generates:
   cmd/main.go:
     ifNotExists: false
-    module: '@nanobus/codegen/tinygo'
+    module: '@nanobus/tinygo'
     visitorClass: MainVisitor
     config:
       import: {{.module}}/pkg/{{.package}}
   pkg/{{.package}}/msgpack.go:
-    module: '@apexlang/codegen/go'
+    module: '@nanobus/tinygo'
     visitorClass: MsgPackVisitor
   pkg/{{.package}}/interfaces.go:
-    module: '@nanobus/codegen/tinygo'
+    module: '@nanobus/tinygo'
     visitorClass: InterfacesVisitor
   pkg/{{.package}}/export.go:
-    module: '@nanobus/codegen/tinygo'
+    module: '@nanobus/tinygo'
     visitorClass: ExportVisitor
   pkg/{{.package}}/import.go:
-    module: '@nanobus/codegen/tinygo'
+    module: '@nanobus/tinygo'
     visitorClass: ImportVisitor
   pkg/{{.package}}/service.go:
     ifNotExists: true
-    module: '@apexlang/codegen/go'
+    module: '@nanobus/tinygo'
     visitorClass: ScaffoldVisitor
     config:
       types:

@@ -79,6 +79,18 @@ export class ImportVisitor extends BaseVisitor {
     package ${packageName}\n`);
 
     if (!hasProviders) {
+      this.write(`
+    import (
+      "github.com/nanobus/iota/go/wasmrs/invoke"
+    )
+
+    var (
+      gCaller invoke.Caller
+    )
+
+    func Initialize(caller invoke.Caller) {
+      gCaller = caller
+    }\n\n`);
       return;
     }
 
