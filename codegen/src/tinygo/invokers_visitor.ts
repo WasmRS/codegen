@@ -23,6 +23,7 @@ import {
   Enum,
   Alias,
   Named,
+  List,
 } from "@apexlang/core/model";
 import {
   expandType,
@@ -246,6 +247,12 @@ export class InvokersVisitor extends BaseVisitor {
       const p = returns as Primitive;
       const transform = primitiveTransformers.get(p.name);
       this.write(`return ${returnPackage}.Map(m, ${transform}.Decode)\n`);
+    } else if (returns.kind == Kind.List) {
+      const l = returns as List;
+      const expanded = expandType(l.type, undefined, undefined, tr);
+      this.write(
+        `return ${returnPackage}.Map(m, transform.SliceDecode[${expanded}])\n`
+      );
     } else {
       this.write(
         `return ${returnPackage}.Map(m, transform.MsgPackDecode[${returnType}])\n`

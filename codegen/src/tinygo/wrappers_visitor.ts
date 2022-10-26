@@ -258,7 +258,7 @@ export class WrappersVisitor extends BaseVisitor {
     }
     if (isVoid(returnType)) {
       this.visitWrapperBeforeReturn(context);
-      this.write(`return []byte{}, nil\n`); // TODO
+      this.write(`return mono.Map(response, transform.Void.Encode)\n`);
     } else if (returnType.kind == Kind.Primitive) {
       const prim = returnType as Primitive;
       this.write(

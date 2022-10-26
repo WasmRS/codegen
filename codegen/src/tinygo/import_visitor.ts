@@ -23,6 +23,8 @@ import {
   List,
   Map,
   Optional,
+  Primitive,
+  PrimitiveName,
   Stream,
 } from "@apexlang/core/model";
 import {
@@ -44,6 +46,7 @@ export class ImportVisitor extends BaseVisitor {
     const packageName = context.config["package"] || "module";
     const importVisitor = new ImportsVisitor(this.writer);
     ns.accept(context, importVisitor);
+    const sortedStdLibs = Array.from(importVisitor.stdLibs).sort();
     const sortedImports = Array.from(importVisitor.imports).sort();
 
     let hasProviders = false;
@@ -82,9 +85,10 @@ export class ImportVisitor extends BaseVisitor {
     this.write(`
     import (
       "context"
-      "encoding/binary"
+      "encoding/binary"\n`);
+    sortedStdLibs.forEach((i) => this.write(`"${i}"\n`));
 
-      "github.com/nanobus/iota/go/wasmrs/invoke"
+    this.write(`\n"github.com/nanobus/iota/go/wasmrs/invoke"
       "github.com/nanobus/iota/go/wasmrs/payload"
       "github.com/nanobus/iota/go/wasmrs/proxy"\n`);
     sortedImports.forEach((i) => this.write(`"${i}"\n`));
@@ -178,6 +182,7 @@ class ProviderNewVisitor extends BaseVisitor {
 }
 
 class ImportsVisitor extends BaseVisitor {
+  stdLibs: Set<string> = new Set();
   imports: Set<string> = new Set();
 
   visitFunction(context: Context): void {
@@ -207,6 +212,12 @@ class ImportsVisitor extends BaseVisitor {
 
   visitCheckType(context: Context, t: AnyType): void {
     switch (t.kind) {
+      case Kind.Primitive:
+        const p = t as Primitive;
+        if (p.name == PrimitiveName.DateTime) {
+          this.stdLibs.add("time");
+        }
+        break;
       case Kind.Alias:
         const a = t as Alias;
         const aliases =

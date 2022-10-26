@@ -29,3 +29,4 @@ export * from "./msgpack_constants.js";
 export * from "./msgpack_decoder_visitor.js";
 export * from "./msgpack_encoder_visitor.js";
 export * from "./msgpack_helpers.js";
+export * from "./scaffold_visitor.js";
