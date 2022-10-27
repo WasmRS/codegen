@@ -1,5 +1,5 @@
-import { utils } from '@apexlang/codegen/rust';
-import { AnyType, ObjectMap } from '@apexlang/core/model';
+import { utils } from "@apexlang/codegen/rust";
+import { AnyType, ObjectMap } from "@apexlang/core/model";
 
 /**
  * Convert an Apex type to a type suitable for the destination format.
@@ -14,7 +14,7 @@ export function convertType(
   typ: AnyType,
   config: ObjectMap,
   asRef = false,
-  lifetime = ''
+  lifetime = ""
 ): string {
-  return utils.types.apexToRustType(typ, config);
+  return utils.types.apexToRustType(typ, config, asRef, lifetime);
 }

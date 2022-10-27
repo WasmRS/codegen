@@ -1,11 +1,18 @@
-import { utils } from '@apexlang/codegen/rust';
+import { utils } from "@apexlang/codegen/rust";
 
-import { Context, Interface, ObjectMap, Operation } from '@apexlang/core/model';
-import { convertDescription } from '../utils/conversions.js';
-import { constantCase } from '../utils/index.js';
-import { convertType } from '../utils/types.js';
+import {
+  Context,
+  Interface,
+  Kind,
+  ObjectMap,
+  Operation,
+  Stream,
+} from "@apexlang/core/model";
+import { convertDescription } from "../utils/conversions.js";
+import { constantCase } from "../utils/index.js";
+import { convertType } from "../utils/types.js";
 
-import { SourceGenerator } from './base.js';
+import { SourceGenerator } from "./base.js";
 const { rustify, rustifyCaps, trimLines } = utils;
 
 export class ProviderVisitor extends SourceGenerator<Interface> {
@@ -36,7 +43,7 @@ export class ProviderVisitor extends SourceGenerator<Interface> {
     });
 
     return `
-${indexConstants.join('\n')}
+${indexConstants.join("\n")}
 ${trimLines([comment])}
 pub mod ${module_name} {
   use super::*;
@@ -71,6 +78,25 @@ export function convertOperation(
 
   const comment = convertDescription(op.description);
 
+  const impl =
+    op.type.kind === Kind.Stream
+      ? gen_request_stream(op, interfaceName, config)
+      : gen_request_response(op, interfaceName, config);
+
+  return `
+${trimLines([comment])}
+${impl}
+`;
+}
+
+function gen_request_response(
+  op: Operation,
+  interfaceName: string,
+  config: ObjectMap
+): string {
+  const name = rustify(op.name);
+  const indexConstant = constantCase(`${interfaceName}_${name}`);
+
   const inputFields = op.parameters
     .map((p) => {
       return `
@@ -78,10 +104,9 @@ export function convertOperation(
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config, true, "'a")},
   `;
     })
-    .join('\n');
+    .join("\n");
 
   return `
-${trimLines([comment])}
 pub(crate) fn ${name}(
   inputs: ${name}::Inputs<'_>,
 ) -> wasmrs_guest::Mono<${name}::Outputs, PayloadError> {
@@ -106,6 +131,52 @@ pub(crate) mod ${name} {
   }
 
   pub(crate) type Outputs = ${convertType(op.type, config)};
+}
+`;
+}
+
+function gen_request_stream(
+  op: Operation,
+  interfaceName: string,
+  config: ObjectMap
+): string {
+  const name = rustify(op.name);
+  const indexConstant = constantCase(`${interfaceName}_${name}`);
+
+  const inputFields = op.parameters
+    .map((p) => {
+      return `
+  #[serde(rename = "${p.name}")]
+  pub(crate) ${rustify(p.name)}: ${convertType(p.type, config, true, "'a")},
+  `;
+    })
+    .join("\n");
+
+  return `
+pub(crate) fn ${name}(
+  inputs: ${name}::Inputs<'_>,
+) -> impl Stream<Item = Result<${name}::Outputs, PayloadError>> {
+//) -> wasmrs_guest::Flux<${name}::Outputs, PayloadError> {
+  let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
+  let payload = match wasmrs_guest::serialize(&inputs) {
+      Ok(bytes) => Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into()),
+      Err(e) => unreachable!(),
+  };
+  Host::default().request_stream(payload).map(|result| {
+      result
+          .map(|payload| Ok(deserialize::<${name}::Outputs>(&payload.data.unwrap())?))?
+  })
+}
+
+pub(crate) mod ${name} {
+  use super::*;
+
+  #[derive(serde::Serialize)]
+  pub struct Inputs<'a> {
+    ${inputFields}
+  }
+
+  pub(crate) type Outputs = ${convertType((op.type as Stream).type, config)};
 }
 `;
 }
