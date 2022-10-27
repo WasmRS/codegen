@@ -26,24 +26,24 @@ import {
   Primitive,
   PrimitiveName,
   Stream,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 import {
   Import,
   methodName,
   setExpandStreamPattern,
-} from '@apexlang/codegen/go';
-import { isProvider, noCode } from '@apexlang/codegen/utils';
-import { InvokersVisitor } from './invokers_visitor.js';
-import { getOperationParts } from './utilities.js';
+} from "@apexlang/codegen/go";
+import { isProvider, noCode } from "@apexlang/codegen/utils";
+import { InvokersVisitor } from "./invokers_visitor.js";
+import { getOperationParts } from "./utilities.js";
 
 export class ImportVisitor extends BaseVisitor {
   visitContextBefore(context: Context): void {
-    setExpandStreamPattern('flux.Flux[{{type}}]');
+    setExpandStreamPattern("flux.Flux[{{type}}]");
   }
 
   visitNamespace(context: Context): void {
     const { namespace: ns } = context;
-    const packageName = context.config['package'] || 'module';
+    const packageName = context.config["package"] || "module";
     const importVisitor = new ImportsVisitor(this.writer);
     ns.accept(context, importVisitor);
     const sortedStdLibs = Array.from(importVisitor.stdLibs).sort();
@@ -52,12 +52,12 @@ export class ImportVisitor extends BaseVisitor {
     let hasProviders = false;
     for (let name in ns.interfaces) {
       const iface = ns.interfaces[name];
-      if (!iface.annotation('provider')) {
+      if (!iface.annotation("provider")) {
         continue;
       }
       if (
         iface.operations.find((o) => {
-          return o.annotation('nocode') != undefined;
+          return o.annotation("nocode") != undefined;
         }) == undefined
       ) {
         hasProviders = true;
@@ -67,7 +67,7 @@ export class ImportVisitor extends BaseVisitor {
     if (!hasProviders) {
       for (let name in ns.functions) {
         const iface = ns.functions[name];
-        if (iface.annotation('provider')) {
+        if (iface.annotation("provider")) {
           hasProviders = true;
           break;
         }
@@ -207,7 +207,7 @@ class ImportsVisitor extends BaseVisitor {
     }
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add('github.com/nanobus/iota/go/wasmrs/rx/mono');
+      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -227,7 +227,7 @@ class ImportsVisitor extends BaseVisitor {
       case Kind.Primitive:
         const p = t as Primitive;
         if (p.name == PrimitiveName.DateTime) {
-          this.stdLibs.add('time');
+          this.stdLibs.add("time");
         }
         break;
       case Kind.Alias:
@@ -242,7 +242,7 @@ class ImportsVisitor extends BaseVisitor {
         }
         break;
       case Kind.Stream:
-        this.imports.add('github.com/nanobus/iota/go/wasmrs/rx/flux');
+        this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;

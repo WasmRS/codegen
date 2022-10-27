@@ -1,13 +1,13 @@
-import { Context } from '@apexlang/core/model';
+import { Context } from "@apexlang/core/model";
 
-import { RustBasic } from '@apexlang/codegen/rust';
-import { ServiceVisitor } from './visitors/service-visitor.js';
-import { ProviderVisitor } from './visitors/provider-visitor.js';
-import { constantCase } from './utils/index.js';
-import { utils } from '@apexlang/codegen/rust';
+import { RustBasic } from "@apexlang/codegen/rust";
+import { ServiceVisitor } from "./visitors/service-visitor.js";
+import { ProviderVisitor } from "./visitors/provider-visitor.js";
+import { constantCase } from "./utils/index.js";
+import { utils } from "@apexlang/codegen/rust";
 
 export class DefaultVisitor extends RustBasic {
-  namespace = '';
+  namespace = "";
   exports: [string, string][] = [];
   imports: [string, string][] = [];
 
@@ -57,20 +57,20 @@ wasmrs_guest::register_request_response(
 
     this.write(`
 pub(crate) fn init_imports() {
-  ${imports.join('\n')}
+  ${imports.join("\n")}
 }
 pub(crate) fn init_exports() {
-  ${exports.join('\n')}
+  ${exports.join("\n")}
 }
     `);
   }
 
   visitInterface(context: Context): void {
-    if (context.interface.annotation('service')) {
+    if (context.interface.annotation("service")) {
       const visitor = new ServiceVisitor(context);
       this.exports.push(...visitor.exports);
       this.append(visitor.buffer());
-    } else if (context.interface.annotation('provider')) {
+    } else if (context.interface.annotation("provider")) {
       const visitor = new ProviderVisitor(context, this.imports.length);
       this.imports.push(...visitor.imports);
       this.append(visitor.buffer());

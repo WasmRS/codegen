@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor } from '@apexlang/core/model';
-import { fieldName } from '@apexlang/codegen/go';
-import { msgpackRead } from './msgpack_helpers.js';
+import { Context, BaseVisitor } from "@apexlang/core/model";
+import { fieldName } from "@apexlang/codegen/go";
+import { msgpackRead } from "./msgpack_helpers.js";
 
 export class MsgPackDecoderVisitor extends BaseVisitor {
   visitTypeFieldsBefore(context: Context): void {
@@ -31,7 +31,7 @@ export class MsgPackDecoderVisitor extends BaseVisitor {
 
     for numFields > 0 {
       numFields--;
-      ${context.fields.length > 0 ? 'field' : '_'}, err := decoder.ReadString()
+      ${context.fields.length > 0 ? "field" : "_"}, err := decoder.ReadString()
       if err != nil {
         return err
       }\n`
@@ -50,7 +50,7 @@ export class MsgPackDecoderVisitor extends BaseVisitor {
         false,
         `o.${fieldName(field, field.name)}`,
         true,
-        '',
+        "",
         field.type,
         false
       )

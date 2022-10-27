@@ -24,7 +24,7 @@ import {
   Alias,
   Named,
   List,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 import {
   expandType,
   translateAlias,
@@ -32,16 +32,16 @@ import {
   methodName,
   fieldName,
   parameterName,
-} from '@apexlang/codegen/go';
+} from "@apexlang/codegen/go";
 import {
   capitalize,
   isObject,
   isPrimitive,
   isVoid,
   operationArgsType,
-} from '@apexlang/codegen/utils';
-import { getOperationParts } from './utilities';
-import { primitiveTransformers } from './constants';
+} from "@apexlang/codegen/utils";
+import { getOperationParts } from "./utilities";
+import { primitiveTransformers } from "./constants";
 
 export class InvokersVisitor extends BaseVisitor {
   visitOperation(context: Context): void {
@@ -79,9 +79,9 @@ export class InvokersVisitor extends BaseVisitor {
     const tr = translateAlias(context);
     const { namespace: ns, interface: iface, operation } = context;
 
-    let receiver = '';
+    let receiver = "";
     if (iface) {
-      const structName = iface.name + 'Impl';
+      const structName = iface.name + "Impl";
       receiver = structName.substring(0, 1).toLowerCase();
       this.write(
         `func (${receiver} *${structName}) ${methodName(
@@ -106,7 +106,7 @@ export class InvokersVisitor extends BaseVisitor {
       getOperationParts(operation);
 
     const returnType = isVoid(returns)
-      ? 'struct{}'
+      ? "struct{}"
       : expandType(returns, undefined, false, tr);
 
     if (unaryIn) {
@@ -183,7 +183,7 @@ export class InvokersVisitor extends BaseVisitor {
       p := payload.New(payloadData, metadata[:])\n`
     );
     if (streamIn) {
-      var transformFn = '';
+      var transformFn = "";
       switch (streamIn.type.kind) {
         case Kind.Primitive:
           const p = streamIn.type as Primitive;
@@ -262,6 +262,6 @@ export class InvokersVisitor extends BaseVisitor {
   }
 
   visitWrapperBeforeReturn(context: Context): void {
-    this.triggerCallbacks(context, 'WrapperBeforeReturn');
+    this.triggerCallbacks(context, "WrapperBeforeReturn");
   }
 }

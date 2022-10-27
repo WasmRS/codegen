@@ -1,6 +1,6 @@
-export * as types from './types.js';
-export * as convert from './conversions.js';
-import { noCase } from '@apexlang/codegen/utils';
+export * as types from "./types.js";
+export * as convert from "./conversions.js";
+import { noCase } from "@apexlang/codegen/utils";
 
 /**
  * A utility function to checks if a name is a reserved word.
@@ -20,14 +20,14 @@ export function isReservedWord(name: string): boolean {
  * it for looser formats.
  */
 const reservedWords = [
-  'new', // examples
-  'function',
-  'class',
+  "new", // examples
+  "function",
+  "class",
 ];
 
 export function constantCase(str: string): string {
   return noCase(str, {
-    delimiter: '_',
+    delimiter: "_",
     transform: (str) => str.toUpperCase(),
   });
 }

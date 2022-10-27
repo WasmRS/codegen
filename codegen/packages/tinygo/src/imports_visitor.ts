@@ -14,21 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { ImportsVisitor as GoImportsVisitor } from '@apexlang/codegen/go';
+import { ImportsVisitor as GoImportsVisitor } from "@apexlang/codegen/go";
 import {
   AnyType,
   Context,
   Kind,
   Operation,
   Stream,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 
 export class ImportsVisitor extends GoImportsVisitor {
   checkType(context: Context, type: AnyType): void {
     if (type.kind == Kind.Stream) {
-      this.addType('flux', {
-        type: 'flux.Flux',
-        import: 'github.com/nanobus/iota/go/wasmrs/rx/flux',
+      this.addType("flux", {
+        type: "flux.Flux",
+        import: "github.com/nanobus/iota/go/wasmrs/rx/flux",
       });
       type = (type as Stream).type;
     }
@@ -47,9 +47,9 @@ export class ImportsVisitor extends GoImportsVisitor {
 
   checkReturn(operation: Operation) {
     if (operation.type.kind != Kind.Stream) {
-      this.addType('mono', {
-        type: 'mono.Mono',
-        import: 'github.com/nanobus/iota/go/wasmrs/rx/mono',
+      this.addType("mono", {
+        type: "mono.Mono",
+        import: "github.com/nanobus/iota/go/wasmrs/rx/mono",
       });
     }
   }

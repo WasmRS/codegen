@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { InterfacesVisitor as GoInterfacesVisitor } from '@apexlang/codegen/go';
-import { Context, Visitor, Writer } from '@apexlang/core/model';
-import { ImportsVisitor } from './imports_visitor';
-import { InterfaceVisitor } from './interface_visitor';
+import { InterfacesVisitor as GoInterfacesVisitor } from "@apexlang/codegen/go";
+import { Context, Visitor, Writer } from "@apexlang/core/model";
+import { ImportsVisitor } from "./imports_visitor";
+import { InterfaceVisitor } from "./interface_visitor";
 
 export class InterfacesVisitor extends GoInterfacesVisitor {
   constructor(writer: Writer) {

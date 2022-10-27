@@ -23,7 +23,7 @@ import {
   Alias,
   Enum,
   List,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 import {
   expandType,
   returnShare,
@@ -32,7 +32,7 @@ import {
   msgpackVarAccessParam,
   setExpandStreamPattern,
   methodName,
-} from '@apexlang/codegen/go';
+} from "@apexlang/codegen/go";
 import {
   capitalize,
   isHandler,
@@ -42,12 +42,12 @@ import {
   noCode,
   operationArgsType,
   uncapitalize,
-} from '@apexlang/codegen/utils';
-import { primitiveTransformers } from './constants';
+} from "@apexlang/codegen/utils";
+import { primitiveTransformers } from "./constants";
 
 export class WrappersVisitor extends BaseVisitor {
   visitContextBefore(context: Context): void {
-    setExpandStreamPattern('flux.Flux[{{type}}]');
+    setExpandStreamPattern("flux.Flux[{{type}}]");
   }
 
   visitOperation(context: Context): void {
@@ -70,7 +70,7 @@ export class WrappersVisitor extends BaseVisitor {
     const { namespace: ns, operation } = context;
     const handlerName = `${capitalize(operation.name)}Fn`;
     const wrapperName = `${uncapitalize(operation.name)}Wrapper`;
-    let rxStyle = 'RequestResponse';
+    let rxStyle = "RequestResponse";
     const streams = operation.parameters
       .filter((p) => p.type.kind == Kind.Stream)
       .map((p) => (p.type as Stream).type);
@@ -82,7 +82,7 @@ export class WrappersVisitor extends BaseVisitor {
       );
     }
     if (streamIn || operation.type.kind == Kind.Stream) {
-      rxStyle = streamIn ? 'RequestChannel' : 'RequestStream';
+      rxStyle = streamIn ? "RequestChannel" : "RequestStream";
     }
 
     this.write(
@@ -101,11 +101,11 @@ export class WrappersVisitor extends BaseVisitor {
     const wrapperName = iface
       ? `${uncapitalize(iface.name)}${capitalize(operation.name)}Wrapper`
       : `${uncapitalize(operation.name)}Wrapper`;
-    let rxStyle = 'RequestResponse';
-    let rxWrapper = 'mono.Mono';
+    let rxStyle = "RequestResponse";
+    let rxWrapper = "mono.Mono";
     let rxArgs = `p payload.Payload`;
     let rxHandlerIn = ``;
-    const rxPackage = operation.type.kind == Kind.Stream ? 'flux' : 'mono';
+    const rxPackage = operation.type.kind == Kind.Stream ? "flux" : "mono";
     const streams = operation.parameters
       .filter((p) => p.type.kind == Kind.Stream)
       .map((p) => (p.type as Stream).type);
@@ -120,8 +120,8 @@ export class WrappersVisitor extends BaseVisitor {
       );
     }
     if (streamIn || operation.type.kind == Kind.Stream) {
-      rxStyle = streamIn ? 'RequestChannel' : 'RequestStream';
-      rxWrapper = 'flux.Flux';
+      rxStyle = streamIn ? "RequestChannel" : "RequestStream";
+      rxWrapper = "flux.Flux";
     }
     if (streamIn) {
       rxArgs += `, in flux.Flux[payload.Payload]`;
@@ -162,7 +162,7 @@ export class WrappersVisitor extends BaseVisitor {
       }
     }
 
-    var handlerMethodName = 'handler';
+    var handlerMethodName = "handler";
     if (iface) {
       this.write(
         `func ${wrapperName}(svc ${iface.name}) invoke.${rxStyle}Handler {
@@ -221,9 +221,9 @@ export class WrappersVisitor extends BaseVisitor {
           ${msgpackRead(
             context,
             false,
-            'request',
+            "request",
             true,
-            '',
+            "",
             unaryParam.type,
             false
           )}`
@@ -247,7 +247,7 @@ export class WrappersVisitor extends BaseVisitor {
       }
       this.write(
         `response := ${handlerMethodName}(${msgpackVarAccessParam(
-          'inputArgs',
+          "inputArgs",
           parameters
         )}${rxHandlerIn})\n`
       );
@@ -306,6 +306,6 @@ export class WrappersVisitor extends BaseVisitor {
   }
 
   visitWrapperBeforeReturn(context: Context): void {
-    this.triggerCallbacks(context, 'WrapperBeforeReturn');
+    this.triggerCallbacks(context, "WrapperBeforeReturn");
   }
 }

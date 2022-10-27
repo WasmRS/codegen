@@ -8,7 +8,7 @@ import {
   Writer,
   Interface,
   ObjectMap,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 
 export type VisitorTypes = Alias | Type | Union | Enum | Interface;
 

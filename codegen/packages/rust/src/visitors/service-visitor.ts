@@ -1,9 +1,9 @@
-import { utils } from '@apexlang/codegen/rust';
-import { Context, Interface, ObjectMap, Operation } from '@apexlang/core/model';
-import { convertDescription } from '../utils/conversions.js';
-import { convertType } from '../utils/types.js';
+import { utils } from "@apexlang/codegen/rust";
+import { Context, Interface, ObjectMap, Operation } from "@apexlang/core/model";
+import { convertDescription } from "../utils/conversions.js";
+import { convertType } from "../utils/types.js";
 
-import { SourceGenerator } from './base.js';
+import { SourceGenerator } from "./base.js";
 
 const { rustify, rustifyCaps, trimLines } = utils;
 
@@ -31,7 +31,7 @@ export class ServiceVisitor extends SourceGenerator<Interface> {
 pub(crate) struct ${componentName}();
 
 impl ${componentName} {
-  ${this.wrappers.join('\n')}
+  ${this.wrappers.join("\n")}
 }
 
 #[async_trait::async_trait(?Send)]
@@ -42,7 +42,7 @@ pub(crate) trait ${serviceName} {
 
 pub mod ${service_module} {
   use super::*;
-  ${this.types.join('\n')}
+  ${this.types.join("\n")}
 }
 `;
   }
@@ -108,7 +108,7 @@ fn ${name}_wrapper(input: IncomingMono) -> Result<OutgoingMono, GenericError> {
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
   `;
     })
-    .join('\n');
+    .join("\n");
 
   const types = `
 pub mod ${name} {

@@ -14,18 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor, Kind, Stream } from '@apexlang/core/model';
-import { setExpandStreamPattern } from '@apexlang/codegen/go';
+import { Context, BaseVisitor, Kind, Stream } from "@apexlang/core/model";
+import { setExpandStreamPattern } from "@apexlang/codegen/go";
 import {
   capitalize,
   isHandler,
   noCode,
   uncapitalize,
-} from '@apexlang/codegen/utils';
+} from "@apexlang/codegen/utils";
 
 export class RegisterVisitor extends BaseVisitor {
   visitContextBefore(context: Context): void {
-    setExpandStreamPattern('flux.Flux[{{type}}]');
+    setExpandStreamPattern("flux.Flux[{{type}}]");
   }
 
   visitInterfaceBefore(context: Context): void {
@@ -47,13 +47,13 @@ export class RegisterVisitor extends BaseVisitor {
     const wrapperName = `${uncapitalize(iface.name)}${capitalize(
       operation.name
     )}Wrapper`;
-    let rxStyle = 'RequestResponse';
+    let rxStyle = "RequestResponse";
     const streams = operation.parameters
       .filter((p) => p.type.kind == Kind.Stream)
       .map((p) => (p.type as Stream).type);
     const streamIn = streams.length > 0 ? streams[0] : undefined;
     if (streamIn || operation.type.kind == Kind.Stream) {
-      rxStyle = streamIn ? 'RequestChannel' : 'RequestStream';
+      rxStyle = streamIn ? "RequestChannel" : "RequestStream";
     }
 
     this.write(

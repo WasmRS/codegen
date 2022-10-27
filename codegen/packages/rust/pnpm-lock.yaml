@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@apexlang/codegen': ^0.0.16
+  '@apexlang/codegen': ^0.0.17
   '@apexlang/core': ^0.1.1
   '@types/jest': ^29.2.0
   '@typescript-eslint/eslint-plugin': ^5.41.0
@@ -15,7 +15,7 @@ specifiers:
   typescript: ^4.8.4
 
 dependencies:
-  '@apexlang/codegen': 0.0.16
+  '@apexlang/codegen': 0.0.17
   '@apexlang/core': 0.1.1
 
 devDependencies:
@@ -40,11 +40,12 @@ packages:
       '@jridgewell/trace-mapping': 0.3.17
     dev: true
 
-  /@apexlang/codegen/0.0.16:
-    resolution: {integrity: sha512-bAuFEXUYX28ibqt8nOaKcBbzvm5nCeMod0bkygaj1Ss2AMS53LfGTSvRSMGLCxwkOYoaC41+FfWM/HEFoliW0Q==}
+  /@apexlang/codegen/0.0.17:
+    resolution: {integrity: sha512-j48x1cEkk31h7Ugz4kO+HqikJUuRPob3rflqAnJLqgDAs+gkb0ZMXlNpSe8T9nJ/EVuOjAG/Q0I+24kf1Zw5qA==}
     engines: {node: '>=14.0'}
     dependencies:
       '@apexlang/core': 0.1.1
+      '@types/node': 18.11.5
       openapi3-ts: 2.0.2
       yaml: 1.10.2
     dev: false
@@ -801,7 +802,6 @@ packages:
 
   /@types/node/18.11.5:
     resolution: {integrity: sha512-3JRwhbjI+cHLAkUorhf8RnqUbFXajvzX4q6fMn5JwkgtuwfYtRQYI3u4V92vI6NJuTsbBQWWh3RZjFsuevyMGQ==}
-    dev: true
 
   /@types/prettier/2.7.1:
     resolution: {integrity: sha512-ri0UmynRRvZiiUJdiz38MmIblKK+oH30MztdBVR95dv/Ubw6neWSb8u1XpRb72L4qsZOhz+L+z9JD40SJmfWow==}

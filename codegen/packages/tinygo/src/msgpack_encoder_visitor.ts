@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor } from '@apexlang/core/model';
-import { fieldName } from '@apexlang/codegen/go';
-import { msgpackEncode } from './msgpack_helpers.js';
+import { Context, BaseVisitor } from "@apexlang/core/model";
+import { fieldName } from "@apexlang/codegen/go";
+import { msgpackEncode } from "./msgpack_helpers.js";
 
 export class MsgPackEncoderVisitor extends BaseVisitor {
   visitTypeFieldsBefore(context: Context): void {
@@ -38,7 +38,7 @@ export class MsgPackEncoderVisitor extends BaseVisitor {
       msgpackEncode(
         context,
         false,
-        'o.' + fieldName(field, field.name),
+        "o." + fieldName(field, field.name),
         field.type
       )
     );
@@ -74,7 +74,7 @@ export class MsgPackEncoderUnionVisitor extends BaseVisitor {
       msgpackEncode(
         context,
         false,
-        'o.' + fieldName(field, field.name),
+        "o." + fieldName(field, field.name),
         field.type
       )
     );

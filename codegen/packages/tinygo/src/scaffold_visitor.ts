@@ -28,7 +28,7 @@ import {
   Type,
   Stream,
   Operation,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 import {
   defaultValueForType,
   expandType,
@@ -37,14 +37,14 @@ import {
   receiver,
   Import,
   translateAlias,
-} from '@apexlang/codegen/go';
+} from "@apexlang/codegen/go";
 import {
   camelCase,
   hasServiceCode,
   isOneOfType,
   isVoid,
   noCode,
-} from '@apexlang/codegen/utils';
+} from "@apexlang/codegen/utils";
 
 interface Logger {
   import: string;
@@ -57,7 +57,7 @@ function getLogger(context: Context): Logger | undefined {
 
 export class ScaffoldVisitor extends BaseVisitor {
   visitNamespaceBefore(context: Context): void {
-    const packageName = context.config.package || 'myapp';
+    const packageName = context.config.package || "myapp";
     super.visitNamespaceBefore(context);
     const logger = getLogger(context);
 
@@ -105,7 +105,7 @@ class ServiceVisitor extends BaseVisitor {
       return;
     }
     let dependencies: string[] = [];
-    iface.annotation('uses', (a) => {
+    iface.annotation("uses", (a) => {
       if (a.arguments.length > 0) {
         dependencies = a.arguments[0].value.getValue() as string[];
       }
@@ -116,8 +116,8 @@ class ServiceVisitor extends BaseVisitor {
       this.write(`log ${logger.interface}\n`);
     }
     this.write(`${dependencies
-      .map((e) => camelCase(e) + ' ' + e)
-      .join('\n\t\t')}
+      .map((e) => camelCase(e) + " " + e)
+      .join("\n\t\t")}
     }
 
     func New${iface.name}(`);
@@ -128,15 +128,15 @@ class ServiceVisitor extends BaseVisitor {
       }
     }
     this.write(`${dependencies
-      .map((e) => camelCase(e) + ' ' + e)
-      .join(', ')}) *${iface.name}Impl {
+      .map((e) => camelCase(e) + " " + e)
+      .join(", ")}) *${iface.name}Impl {
       return &${iface.name}Impl{\n`);
     if (logger) {
-      this.write('log: log,\n');
+      this.write("log: log,\n");
     }
     this.write(`${dependencies
-      .map((e) => camelCase(e) + ': ' + camelCase(e) + ',')
-      .join('\n\t\t')}
+      .map((e) => camelCase(e) + ": " + camelCase(e) + ",")
+      .join("\n\t\t")}
       }
     }\n\n`);
   }
@@ -255,7 +255,7 @@ class ImportsVisitor extends BaseVisitor {
     if (i == undefined || i.import == undefined) {
       return;
     }
-    if (i.import.indexOf('.') != -1) {
+    if (i.import.indexOf(".") != -1) {
       if (this.externalImports[name] === undefined) {
         this.externalImports[name] = i;
       }
@@ -268,9 +268,9 @@ class ImportsVisitor extends BaseVisitor {
 
   checkReturn(operation: Operation) {
     if (operation.type.kind != Kind.Stream) {
-      this.addType('mono', {
-        type: 'mono.Mono',
-        import: 'github.com/nanobus/iota/go/wasmrs/rx/mono',
+      this.addType("mono", {
+        type: "mono.Mono",
+        import: "github.com/nanobus/iota/go/wasmrs/rx/mono",
       });
     }
   }
@@ -290,9 +290,9 @@ class ImportsVisitor extends BaseVisitor {
         const prim = type as Primitive;
         switch (prim.name) {
           case PrimitiveName.DateTime:
-            this.addType('Time', {
-              type: 'time.Time',
-              import: 'time',
+            this.addType("Time", {
+              type: "time.Time",
+              import: "time",
             });
             break;
         }
@@ -300,10 +300,10 @@ class ImportsVisitor extends BaseVisitor {
       case Kind.Type:
         const named = type as Type;
         const i = aliases[named.name];
-        if (named.name === 'datetime' && i == undefined) {
-          this.addType('Time', {
-            type: 'time.Time',
-            import: 'time',
+        if (named.name === "datetime" && i == undefined) {
+          this.addType("Time", {
+            type: "time.Time",
+            import: "time",
           });
           return;
         }
@@ -324,9 +324,9 @@ class ImportsVisitor extends BaseVisitor {
         break;
       case Kind.Stream:
         const stream = type as Stream;
-        this.addType('flux', {
-          type: 'flux.Flux',
-          import: 'github.com/nanobus/iota/go/wasmrs/rx/flux',
+        this.addType("flux", {
+          type: "flux.Flux",
+          import: "github.com/nanobus/iota/go/wasmrs/rx/flux",
         });
         this.checkType(context, stream.type);
         break;

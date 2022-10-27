@@ -1,6 +1,6 @@
-import { utils } from '@apexlang/codegen/rust';
-import { ObjectMap, Parameter } from '@apexlang/core/model';
-import { convertType } from './types';
+import { utils } from "@apexlang/codegen/rust";
+import { ObjectMap, Parameter } from "@apexlang/core/model";
+import { convertType } from "./types";
 
 /**
  * Convert a description to the appropriate format for the destination.

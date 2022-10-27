@@ -20,7 +20,7 @@ import {
   Operation,
   Parameter,
   AnyType,
-} from '@apexlang/core/model';
+} from "@apexlang/core/model";
 
 export interface OperationParts {
   type: string;
@@ -37,7 +37,7 @@ export interface StreamParam {
 }
 
 export function getOperationParts(operation: Operation): OperationParts {
-  let rxType = 'RequestResponse';
+  let rxType = "RequestResponse";
   const parameters = operation.parameters.filter(
     (p) => p.type.kind != Kind.Stream
   );
@@ -58,14 +58,14 @@ export function getOperationParts(operation: Operation): OperationParts {
   }
   var returns = operation.type;
   if (streamIn || operation.type.kind == Kind.Stream) {
-    rxType = streamIn ? 'RequestChannel' : 'RequestStream';
+    rxType = streamIn ? "RequestChannel" : "RequestStream";
     returns = (operation.type as Stream).type;
   }
 
   const unaryIn =
     operation.isUnary() && parameters.length > 0 ? parameters[0] : undefined;
 
-  const returnPackage = operation.type.kind == Kind.Stream ? 'flux' : 'mono';
+  const returnPackage = operation.type.kind == Kind.Stream ? "flux" : "mono";
 
   return {
     type: rxType,

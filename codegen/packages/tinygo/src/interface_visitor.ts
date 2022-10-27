@@ -19,9 +19,9 @@ import {
   InterfaceVisitor as GoInterfaceVisitor,
   setExpandStreamPattern,
   translateAlias,
-} from '@apexlang/codegen/go';
-import { isVoid } from '@apexlang/codegen/utils';
-import { Context, Kind, Stream, Writer } from '@apexlang/core/model';
+} from "@apexlang/codegen/go";
+import { isVoid } from "@apexlang/codegen/utils";
+import { Context, Kind, Stream, Writer } from "@apexlang/core/model";
 
 export class InterfaceVisitor extends GoInterfaceVisitor {
   constructor(writer: Writer) {

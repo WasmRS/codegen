@@ -24,15 +24,15 @@ import {
   Map,
   Optional,
   Stream,
-} from '@apexlang/core/model';
-import { Import } from '@apexlang/codegen/go';
-import { WrappersVisitor } from './wrappers_visitor.js';
-import { RegisterVisitor } from './register_visitor.js';
-import { isHandler } from '@apexlang/codegen/utils';
+} from "@apexlang/core/model";
+import { Import } from "@apexlang/codegen/go";
+import { WrappersVisitor } from "./wrappers_visitor.js";
+import { RegisterVisitor } from "./register_visitor.js";
+import { isHandler } from "@apexlang/codegen/utils";
 
 export class ExportVisitor extends BaseVisitor {
   visitNamespace(context: Context): void {
-    const packageName = context.config['package'] || 'module';
+    const packageName = context.config["package"] || "module";
     const importVisitor = new ImportsVisitor(this.writer);
     context.namespace.accept(context, importVisitor);
     const sortedImports = Array.from(importVisitor.imports).sort();
@@ -64,7 +64,7 @@ class ImportsVisitor extends BaseVisitor {
   visitFunction(context: Context): void {
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add('github.com/nanobus/iota/go/wasmrs/rx/mono');
+      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -75,7 +75,7 @@ class ImportsVisitor extends BaseVisitor {
     }
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add('github.com/nanobus/iota/go/wasmrs/rx/mono');
+      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -104,7 +104,7 @@ class ImportsVisitor extends BaseVisitor {
         }
         break;
       case Kind.Stream:
-        this.imports.add('github.com/nanobus/iota/go/wasmrs/rx/flux');
+        this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;

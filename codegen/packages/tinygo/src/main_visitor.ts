@@ -14,13 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor, Writer } from '@apexlang/core/model';
+import { Context, BaseVisitor, Writer } from "@apexlang/core/model";
 import {
   camelCase,
   isService,
   InterfaceUsesVisitor,
   UsesVisitor,
-} from '@apexlang/codegen/utils';
+} from "@apexlang/codegen/utils";
 
 export class MainVisitor extends BaseVisitor {
   // Overridable visitor implementations
@@ -32,7 +32,7 @@ export class MainVisitor extends BaseVisitor {
     const importPath =
       context.config.import ||
       context.config.module ||
-      'github.com/myorg/mymodule/pkg/module';
+      "github.com/myorg/mymodule/pkg/module";
     super.visitNamespaceBefore(context);
 
     this.uses = this.usesVisitor(this.writer);
@@ -51,7 +51,7 @@ export class MainVisitor extends BaseVisitor {
     this.write(`\n`);
 
     this.write(`func main() {\n`);
-    const packageName = context.config.package || 'module';
+    const packageName = context.config.package || "module";
     this.write(`\t${packageName}.Initialize(guest.HostInvoker)\n\n`);
     this.write(`// Create providers\n`);
     this.uses!.dependencies.forEach((dependency) => {
@@ -65,8 +65,8 @@ export class MainVisitor extends BaseVisitor {
     this.write(`\n\n// Create services\n`);
     this.uses!.services.forEach((dependencies, service) => {
       const deps = dependencies
-        .map((d) => camelCase(d) + 'Provider')
-        .join(', ');
+        .map((d) => camelCase(d) + "Provider")
+        .join(", ");
       this.write(
         `${camelCase(
           service
@@ -86,7 +86,7 @@ class HandlerRegistrationVisitor extends BaseVisitor {
     if (!isService(context)) {
       return;
     }
-    const packageName = context.config['package'] || 'module';
+    const packageName = context.config["package"] || "module";
     const { interface: iface } = context;
 
     this.write(

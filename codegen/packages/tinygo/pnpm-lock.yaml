@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@apexlang/codegen': ^0.0.16
+  '@apexlang/codegen': ^0.0.17
   '@apexlang/core': ^0.1.1
   '@typescript-eslint/eslint-plugin': ^5.41.0
   '@typescript-eslint/parser': ^5.41.0
@@ -11,7 +11,7 @@ specifiers:
   typescript: ^4.8.4
 
 dependencies:
-  '@apexlang/codegen': 0.0.16
+  '@apexlang/codegen': 0.0.17
   '@apexlang/core': 0.1.1
 
 devDependencies:
@@ -24,11 +24,12 @@ devDependencies:
 
 packages:
 
-  /@apexlang/codegen/0.0.16:
-    resolution: {integrity: sha512-bAuFEXUYX28ibqt8nOaKcBbzvm5nCeMod0bkygaj1Ss2AMS53LfGTSvRSMGLCxwkOYoaC41+FfWM/HEFoliW0Q==}
+  /@apexlang/codegen/0.0.17:
+    resolution: {integrity: sha512-j48x1cEkk31h7Ugz4kO+HqikJUuRPob3rflqAnJLqgDAs+gkb0ZMXlNpSe8T9nJ/EVuOjAG/Q0I+24kf1Zw5qA==}
     engines: {node: '>=14.0'}
     dependencies:
       '@apexlang/core': 0.1.1
+      '@types/node': 18.11.7
       openapi3-ts: 2.0.2
       yaml: 1.10.2
     dev: false
@@ -99,6 +100,10 @@ packages:
   /@types/json-schema/7.0.11:
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
     dev: true
+
+  /@types/node/18.11.7:
+    resolution: {integrity: sha512-LhFTglglr63mNXUSRYD8A+ZAIu5sFqNJ4Y2fPuY7UlrySJH87rRRlhtVmMHplmfk5WkoJGmDjE9oiTfyX94CpQ==}
+    dev: false
 
   /@types/semver/7.3.12:
     resolution: {integrity: sha512-WwA1MW0++RfXmCr12xeYOOC5baSC9mSb0ZqCquFzKhcoF4TvHu5MKOuXsncgZcpVFhB1pXd5hZmM0ryAoCp12A==}

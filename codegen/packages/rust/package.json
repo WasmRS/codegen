@@ -44,7 +44,7 @@
   },
   "dependencies": {
     "@apexlang/core": "^0.1.1",
-    "@apexlang/codegen": "^0.0.16"
+    "@apexlang/codegen": "^0.0.17"
   },
   "devDependencies": {
     "@types/jest": "^29.2.0",
