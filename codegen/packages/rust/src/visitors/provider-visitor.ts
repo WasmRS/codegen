@@ -106,9 +106,12 @@ function gen_request_response(
     })
     .join("\n");
 
+  const lifetime = op.parameters.length > 0 ? "<'a>" : "";
+  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : "";
+
   return `
 pub(crate) fn ${name}(
-  inputs: ${name}::Inputs<'_>,
+  inputs: ${name}::Inputs${lifetimeIn},
 ) -> wasmrs_guest::Mono<${name}::Outputs, PayloadError> {
   let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
   let payload = match wasmrs_guest::serialize(&inputs) {
@@ -126,7 +129,7 @@ pub(crate) mod ${name} {
   use super::*;
 
   #[derive(serde::Serialize)]
-  pub struct Inputs<'a> {
+  pub struct Inputs${lifetime} {
     ${inputFields}
   }
 
@@ -152,9 +155,12 @@ function gen_request_stream(
     })
     .join("\n");
 
+  const lifetime = op.parameters.length > 0 ? "<'a>" : "";
+  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : "";
+
   return `
 pub(crate) fn ${name}(
-  inputs: ${name}::Inputs<'_>,
+  inputs: ${name}::Inputs${lifetimeIn},
 ) -> impl Stream<Item = Result<${name}::Outputs, PayloadError>> {
 //) -> wasmrs_guest::Flux<${name}::Outputs, PayloadError> {
   let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
@@ -172,7 +178,7 @@ pub(crate) mod ${name} {
   use super::*;
 
   #[derive(serde::Serialize)]
-  pub struct Inputs<'a> {
+  pub struct Inputs${lifetime} {
     ${inputFields}
   }
 
