@@ -26,17 +26,25 @@ import {
   Primitive,
   PrimitiveName,
   Stream,
+  Writer,
 } from "@apexlang/core/model";
 import {
   Import,
   methodName,
   setExpandStreamPattern,
 } from "@apexlang/codegen/go";
-import { isProvider, noCode } from "@apexlang/codegen/utils";
+import { isHandler, isProvider, noCode } from "@apexlang/codegen/utils";
 import { InvokersVisitor } from "./invokers_visitor.js";
 import { getOperationParts } from "./utilities.js";
 
-export class ImportVisitor extends BaseVisitor {
+export class ImportBaseVisitor extends BaseVisitor {
+  private filter: (context: Context) => boolean;
+
+  constructor(writer: Writer, filter: (context: Context) => boolean) {
+    super(writer);
+    this.filter = filter;
+  }
+
   visitContextBefore(context: Context): void {
     setExpandStreamPattern("flux.Flux[{{type}}]");
   }
@@ -44,7 +52,7 @@ export class ImportVisitor extends BaseVisitor {
   visitNamespace(context: Context): void {
     const { namespace: ns } = context;
     const packageName = context.config["package"] || "module";
-    const importVisitor = new ImportsVisitor(this.writer);
+    const importVisitor = new ImportsVisitor(this.writer, this.filter);
     ns.accept(context, importVisitor);
     const sortedStdLibs = Array.from(importVisitor.stdLibs).sort();
     const sortedImports = Array.from(importVisitor.imports).sort();
@@ -132,7 +140,7 @@ export class ImportVisitor extends BaseVisitor {
   }
 
   visitFunction(context: Context): void {
-    if (!isProvider(context) || noCode(context.operation)) {
+    if (this.filter(context)) {
       return;
     }
     const invokersVisitor = new InvokersVisitor(this.writer);
@@ -140,7 +148,7 @@ export class ImportVisitor extends BaseVisitor {
   }
 
   visitInterface(context: Context): void {
-    if (!isProvider(context) || noCode(context.operation)) {
+    if (this.filter(context)) {
       return;
     }
     const { interface: iface } = context;
@@ -151,6 +159,22 @@ export class ImportVisitor extends BaseVisitor {
     iface.accept(context, providerNewVisitor);
     const invokersVisitor = new InvokersVisitor(this.writer);
     iface.accept(context, invokersVisitor);
+  }
+}
+
+export class ProviderVisitor extends ImportBaseVisitor {
+  constructor(writer: Writer) {
+    super(writer, (context: Context): boolean => {
+      return !isProvider(context) || noCode(context.operation);
+    });
+  }
+}
+
+export class ImportVisitor extends ImportBaseVisitor {
+  constructor(writer: Writer) {
+    super(writer, (context: Context): boolean => {
+      return !isHandler(context) || noCode(context.operation);
+    });
   }
 }
 
@@ -196,13 +220,19 @@ class ProviderNewVisitor extends BaseVisitor {
 class ImportsVisitor extends BaseVisitor {
   stdLibs: Set<string> = new Set();
   imports: Set<string> = new Set();
+  private filter: (context: Context) => boolean;
+
+  constructor(writer: Writer, filter: (context: Context) => boolean) {
+    super(writer);
+    this.filter = filter;
+  }
 
   visitFunction(context: Context): void {
     this.visitOperation(context);
   }
 
   visitOperation(context: Context): void {
-    if (!isProvider(context)) {
+    if (this.filter(context)) {
       return;
     }
     const { operation } = context;
@@ -213,7 +243,7 @@ class ImportsVisitor extends BaseVisitor {
   }
 
   visitParameter(context: Context): void {
-    if (!isProvider(context)) {
+    if (this.filter(context)) {
       return;
     }
     const { operation, parameter } = context;
