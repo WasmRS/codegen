@@ -124,6 +124,9 @@ class ImportsVisitor extends BaseVisitor {
     const { operation, parameter } = context;
     if (operation.unary) {
       this.checkType(context, parameter.type);
+    } else {
+      // Fields in Args type
+      this.checkType(context, parameter.type, true);
     }
   }
 
@@ -132,11 +135,11 @@ class ImportsVisitor extends BaseVisitor {
     this.checkType(context, field.type);
   }
 
-  checkType(context: Context, t: AnyType): void {
+  checkType(context: Context, t: AnyType, argument: boolean = false): void {
     switch (t.kind) {
       case Kind.Primitive:
         const p = t as Primitive;
-        if (p.name == PrimitiveName.DateTime) {
+        if (argument && p.name == PrimitiveName.DateTime) {
           this.imports.add("time");
         }
         break;
@@ -148,25 +151,25 @@ class ImportsVisitor extends BaseVisitor {
         if (t2 && t2.import) {
           this.imports.add(t2.import);
         } else {
-          this.checkType(context, a.type);
+          this.checkType(context, a.type, argument);
         }
         break;
       case Kind.Stream:
         const s = t as Stream;
-        this.checkType(context, s.type);
+        this.checkType(context, s.type, argument);
         break;
       case Kind.Optional:
         const o = t as Optional;
-        this.checkType(context, o.type);
+        this.checkType(context, o.type, argument);
         break;
       case Kind.List:
         const l = t as List;
-        this.checkType(context, l.type);
+        this.checkType(context, l.type, argument);
         break;
       case Kind.Map:
         const m = t as Map;
-        this.checkType(context, m.keyType);
-        this.checkType(context, m.valueType);
+        this.checkType(context, m.keyType, argument);
+        this.checkType(context, m.valueType, argument);
         break;
     }
   }

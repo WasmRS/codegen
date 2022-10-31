@@ -180,7 +180,7 @@ export class InvokersVisitor extends BaseVisitor {
       if ok {
         binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
       }
-      p := payload.New(payloadData, metadata[:])\n`
+      pl := payload.New(payloadData, metadata[:])\n`
     );
     if (streamIn) {
       var transformFn = "";
@@ -214,25 +214,25 @@ export class InvokersVisitor extends BaseVisitor {
           console.log(streamIn.type.kind);
       }
       const inMap = `flux.Map(${streamIn.parameter.name}, ${transformFn})`;
-      this.write(`m := gCaller.${type}(ctx, p, ${inMap})\n`);
+      this.write(`future := gCaller.${type}(ctx, pl, ${inMap})\n`);
     } else {
-      this.write(`m := gCaller.${type}(ctx, p)\n`);
+      this.write(`future := gCaller.${type}(ctx, pl)\n`);
     }
     if (isVoid(returns)) {
-      this.write(`return mono.Map(m, transform.Void.Decode)\n`);
+      this.write(`return mono.Map(future, transform.Void.Decode)\n`);
     } else if (returns.kind == Kind.Alias) {
       const a = returns as Alias;
       if (a.type.kind == Kind.Primitive) {
         const p = a.type as Primitive;
         this.write(
-          `return ${returnPackage}.Map(m, transform.${capitalize(
+          `return ${returnPackage}.Map(future, transform.${capitalize(
             p.name
           )}Decode[${a.name}])\n`
         );
       } else {
         const expanded = expandType(a.type, undefined, undefined, tr);
         this.write(
-          `return ${returnPackage}.Map(m, func(raw payload.Payload) (val ${a.name}, err error) {
+          `return ${returnPackage}.Map(future, func(raw payload.Payload) (val ${a.name}, err error) {
             err = transform.CodecDecode(raw, (*${expanded})(&val))
             return val, err
           })\n`
@@ -241,21 +241,21 @@ export class InvokersVisitor extends BaseVisitor {
     } else if (returns.kind == Kind.Enum) {
       const e = returns as Enum;
       this.write(
-        `return ${returnPackage}.Map(m, transform.Int32Decode[${e.name}])\n`
+        `return ${returnPackage}.Map(future, transform.Int32Decode[${e.name}])\n`
       );
     } else if (isPrimitive(returns)) {
       const p = returns as Primitive;
       const transform = primitiveTransformers.get(p.name);
-      this.write(`return ${returnPackage}.Map(m, ${transform}.Decode)\n`);
+      this.write(`return ${returnPackage}.Map(future, ${transform}.Decode)\n`);
     } else if (returns.kind == Kind.List) {
       const l = returns as List;
       const expanded = expandType(l.type, undefined, undefined, tr);
       this.write(
-        `return ${returnPackage}.Map(m, transform.SliceDecode[${expanded}])\n`
+        `return ${returnPackage}.Map(future, transform.SliceDecode[${expanded}])\n`
       );
     } else {
       this.write(
-        `return ${returnPackage}.Map(m, transform.MsgPackDecode[${returnType}])\n`
+        `return ${returnPackage}.Map(future, transform.MsgPackDecode[${returnType}])\n`
       );
     }
     this.write(`}\n\n`);
