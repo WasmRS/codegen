@@ -166,7 +166,7 @@ pub(crate) fn ${name}(
   let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
   let payload = match wasmrs_guest::serialize(&inputs) {
       Ok(bytes) => Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into()),
-      Err(e) => unreachable!(),
+      Err(_) => unreachable!(),
   };
   Host::default().request_stream(payload).map(|result| {
       result
