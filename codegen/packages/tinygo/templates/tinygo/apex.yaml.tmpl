@@ -19,9 +19,9 @@ generates:
   pkg/{{.package}}/export.go:
     module: '@nanobus/tinygo'
     visitorClass: ExportVisitor
-  pkg/{{.package}}/import.go:
+  pkg/{{.package}}/providers.go:
     module: '@nanobus/tinygo'
-    visitorClass: ImportVisitor
+    visitorClass: ProviderVisitor
   pkg/{{.package}}/service.go:
     ifNotExists: true
     module: '@nanobus/tinygo'
