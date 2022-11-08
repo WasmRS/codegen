@@ -108,7 +108,7 @@ services:\n`);
 }
 
 class ServicesVisitor extends BaseVisitor {
-  visitRole(context: Context): void {
+  visitInterface(context: Context): void {
     if (!isService(context)) {
       return;
     }
