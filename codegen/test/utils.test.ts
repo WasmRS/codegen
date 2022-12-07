@@ -1,4 +1,4 @@
-import { constantCase } from "../src/utils/index.js";
+import { constantCase } from "../src/rust/utils/index.js";
 
 describe("utils", () => {
   test("constantCase", () => {

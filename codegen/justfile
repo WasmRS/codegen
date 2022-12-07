@@ -1,20 +1,20 @@
 install:
-  npx pnpm -r install
+  npm install
 
 build: install
-  npx pnpm -r build
+  npm run build
 
 watch:
-  npx pnpm -r watch
+  npm run watch
 
 test:
-  npx pnpm -r test
+  npm run test
 
 update-deps:
-  npx pnpm -r exec npx npm-check-updates -u
+  npx npm-check-updates -u
 
 apex-install:
-  npx pnpm -r devbuild
+  npm run devbuild
 
 clean:
   rm -rf packages/*/node_modules
