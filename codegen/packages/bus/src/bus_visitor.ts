@@ -36,6 +36,10 @@ transports:
     uses: rest
     with:
       address: :8080
+      documentation:
+        swaggerUI: true
+        postman: true
+        restClient: true
   httprpc:
     uses: httprpc
     with:

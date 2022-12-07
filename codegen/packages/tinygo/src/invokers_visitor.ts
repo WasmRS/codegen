@@ -105,9 +105,10 @@ export class InvokersVisitor extends BaseVisitor {
     const { type, unaryIn, parameters, streamIn, returns, returnPackage } =
       getOperationParts(operation);
 
-    const returnType = isVoid(returns)
-      ? "struct{}"
-      : expandType(returns, undefined, false, tr);
+    const returnType =
+      !returns || isVoid(returns)
+        ? "struct{}"
+        : expandType(returns, undefined, false, tr);
 
     if (unaryIn) {
       if (unaryIn.type.kind == Kind.Enum) {
@@ -218,7 +219,7 @@ export class InvokersVisitor extends BaseVisitor {
     } else {
       this.write(`future := gCaller.${type}(ctx, pl)\n`);
     }
-    if (isVoid(returns)) {
+    if (!returns || isVoid(returns)) {
       this.write(`return mono.Map(future, transform.Void.Decode)\n`);
     } else if (returns.kind == Kind.Alias) {
       const a = returns as Alias;

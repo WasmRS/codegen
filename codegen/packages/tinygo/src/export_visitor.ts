@@ -44,10 +44,10 @@ export class ExportVisitor extends BaseVisitor {
     import (
       "context"
 
-      "github.com/nanobus/iota/go/wasmrs/invoke"
-      "github.com/nanobus/iota/go/wasmrs/payload"\n`);
+      "github.com/nanobus/iota/go/invoke"
+      "github.com/nanobus/iota/go/payload"\n`);
     sortedImports.forEach((i) => this.write(`"${i}"\n`));
-    this.write(`"github.com/nanobus/iota/go/wasmrs/transform"\n`);
+    this.write(`"github.com/nanobus/iota/go/transform"\n`);
     this.write(`)\n\n`);
 
     const registerVisitor = new RegisterVisitor(this.writer);
@@ -64,7 +64,7 @@ class ImportsVisitor extends BaseVisitor {
   visitFunction(context: Context): void {
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
+      this.imports.add("github.com/nanobus/iota/go/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -75,7 +75,7 @@ class ImportsVisitor extends BaseVisitor {
     }
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
+      this.imports.add("github.com/nanobus/iota/go/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -104,7 +104,7 @@ class ImportsVisitor extends BaseVisitor {
         }
         break;
       case Kind.Stream:
-        this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/flux");
+        this.imports.add("github.com/nanobus/iota/go/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;

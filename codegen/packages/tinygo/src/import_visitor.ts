@@ -70,7 +70,7 @@ export class ImportBaseVisitor extends BaseVisitor {
     if (!this.hasAny(context)) {
       this.write(`
     import (
-      "github.com/nanobus/iota/go/wasmrs/invoke"
+      "github.com/nanobus/iota/go/invoke"
     )
 
     var (
@@ -89,11 +89,11 @@ export class ImportBaseVisitor extends BaseVisitor {
       "encoding/binary"\n`);
     sortedStdLibs.forEach((i) => this.write(`"${i}"\n`));
 
-    this.write(`\n"github.com/nanobus/iota/go/wasmrs/invoke"
-      "github.com/nanobus/iota/go/wasmrs/payload"
-      "github.com/nanobus/iota/go/wasmrs/proxy"\n`);
+    this.write(`\n"github.com/nanobus/iota/go/invoke"
+      "github.com/nanobus/iota/go/payload"
+      "github.com/nanobus/iota/go/proxy"\n`);
     sortedImports.forEach((i) => this.write(`"${i}"\n`));
-    this.write(`"github.com/nanobus/iota/go/wasmrs/transform"\n`);
+    this.write(`"github.com/nanobus/iota/go/transform"\n`);
     this.write(`"github.com/nanobus/iota/go/msgpack"
     )\n\n`);
 
@@ -263,7 +263,7 @@ class ImportsVisitor extends BaseVisitor {
     }
     const { operation } = context;
     if (operation.type.kind != Kind.Stream) {
-      this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/mono");
+      this.imports.add("github.com/nanobus/iota/go/rx/mono");
     }
     this.visitCheckType(context, operation.type);
   }
@@ -298,7 +298,7 @@ class ImportsVisitor extends BaseVisitor {
         }
         break;
       case Kind.Stream:
-        this.imports.add("github.com/nanobus/iota/go/wasmrs/rx/flux");
+        this.imports.add("github.com/nanobus/iota/go/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;

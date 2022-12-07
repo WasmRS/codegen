@@ -270,7 +270,7 @@ class ImportsVisitor extends BaseVisitor {
     if (operation.type.kind != Kind.Stream) {
       this.addType("mono", {
         type: "mono.Mono",
-        import: "github.com/nanobus/iota/go/wasmrs/rx/mono",
+        import: "github.com/nanobus/iota/go/rx/mono",
       });
     }
   }
@@ -326,7 +326,7 @@ class ImportsVisitor extends BaseVisitor {
         const stream = type as Stream;
         this.addType("flux", {
           type: "flux.Flux",
-          import: "github.com/nanobus/iota/go/wasmrs/rx/flux",
+          import: "github.com/nanobus/iota/go/rx/flux",
         });
         this.checkType(context, stream.type);
         break;
