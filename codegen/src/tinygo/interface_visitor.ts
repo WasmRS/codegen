@@ -15,13 +15,18 @@ limitations under the License.
 */
 
 import {
+  Context,
+  Kind,
+  Stream,
+  Writer,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import {
   expandType,
   InterfaceVisitor as GoInterfaceVisitor,
   setExpandStreamPattern,
   translateAlias,
-} from "@apexlang/codegen/go";
-import { isVoid } from "@apexlang/codegen/utils";
-import { Context, Kind, Stream, Writer } from "@apexlang/core/model";
+} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import { isVoid } from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
 
 export class InterfaceVisitor extends GoInterfaceVisitor {
   constructor(writer: Writer) {

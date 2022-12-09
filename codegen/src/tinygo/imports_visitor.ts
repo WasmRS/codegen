@@ -14,14 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { ImportsVisitor as GoImportsVisitor } from "@apexlang/codegen/go";
 import {
   AnyType,
   Context,
   Kind,
   Operation,
   Stream,
-} from "@apexlang/core/model";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { ImportsVisitor as GoImportsVisitor } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
 
 export class ImportsVisitor extends GoImportsVisitor {
   checkType(context: Context, type: AnyType): void {

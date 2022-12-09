@@ -28,7 +28,8 @@ just clean
 
 ### Link against local packages
 
-When developing against local development versions of apex or apex codegen, link the local modules with the following command
+When developing against local development versions of apex or apex codegen, link
+the local modules with the following command
 
 ```
 pnpm link ../path/to/apex/codegen

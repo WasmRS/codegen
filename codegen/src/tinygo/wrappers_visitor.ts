@@ -15,24 +15,24 @@ limitations under the License.
 */
 
 import {
-  Context,
+  Alias,
   BaseVisitor,
+  Context,
+  Enum,
   Kind,
+  List,
   Primitive,
   Stream,
-  Alias,
-  Enum,
-  List,
-} from "@apexlang/core/model";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
   expandType,
-  returnShare,
-  translateAlias,
+  methodName,
   msgpackRead,
   msgpackVarAccessParam,
+  returnShare,
   setExpandStreamPattern,
-  methodName,
-} from "@apexlang/codegen/go";
+  translateAlias,
+} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
 import {
   capitalize,
   isHandler,
@@ -42,11 +42,11 @@ import {
   noCode,
   operationArgsType,
   uncapitalize,
-} from "@apexlang/codegen/utils";
-import { primitiveTransformers } from "./constants";
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+import { primitiveTransformers } from "./constants.ts";
 
 export class WrappersVisitor extends BaseVisitor {
-  visitContextBefore(context: Context): void {
+  visitContextBefore(_context: Context): void {
     setExpandStreamPattern("flux.Flux[{{type}}]");
   }
 
@@ -66,7 +66,6 @@ export class WrappersVisitor extends BaseVisitor {
   }
 
   doRegister(context: Context): void {
-    const tr = translateAlias(context);
     const { namespace: ns, operation } = context;
     const handlerName = `${capitalize(operation.name)}Fn`;
     const wrapperName = `${uncapitalize(operation.name)}Wrapper`;
@@ -78,7 +77,7 @@ export class WrappersVisitor extends BaseVisitor {
 
     if (streams.length > 1) {
       throw new Error(
-        `There can only be zero or one stream parameter. Found ${streams.length}.`
+        `There can only be zero or one stream parameter. Found ${streams.length}.`,
       );
     }
     if (streamIn || operation.type.kind == Kind.Stream) {
@@ -87,16 +86,14 @@ export class WrappersVisitor extends BaseVisitor {
 
     this.write(
       `func Register${capitalize(operation.name)}(handler ${handlerName}) {
-      invoke.Export${rxStyle}("${ns.name}", "${
-        operation.name
-      }", ${wrapperName}(handler))
-    }\n\n`
+      invoke.Export${rxStyle}("${ns.name}", "${operation.name}", ${wrapperName}(handler))
+    }\n\n`,
     );
   }
 
   doHandler(context: Context): void {
     const tr = translateAlias(context);
-    const { namespace: ns, interface: iface, operation } = context;
+    const { interface: iface, operation } = context;
     const handlerName = `${capitalize(operation.name)}Fn`;
     const wrapperName = iface
       ? `${uncapitalize(iface.name)}${capitalize(operation.name)}Wrapper`
@@ -110,13 +107,13 @@ export class WrappersVisitor extends BaseVisitor {
       .filter((p) => p.type.kind == Kind.Stream)
       .map((p) => (p.type as Stream).type);
     const parameters = operation.parameters.filter(
-      (p) => p.type.kind != Kind.Stream
+      (p) => p.type.kind != Kind.Stream,
     );
     const streamIn = streams.length > 0 ? streams[0] : undefined;
 
     if (streams.length > 1) {
       throw new Error(
-        `There can only be zero or one stream parameter. Found ${streams.length}.`
+        `There can only be zero or one stream parameter. Found ${streams.length}.`,
       );
     }
     if (streamIn || operation.type.kind == Kind.Stream) {
@@ -126,53 +123,63 @@ export class WrappersVisitor extends BaseVisitor {
     if (streamIn) {
       rxArgs += `, in flux.Flux[payload.Payload]`;
       switch (streamIn.kind) {
-        case Kind.Primitive:
+        case Kind.Primitive: {
           const prim = streamIn as Primitive;
-          rxHandlerIn = `, flux.Map(in, ${primitiveTransformers.get(
-            prim.name
-          )}.Decode)`;
+          rxHandlerIn = `, flux.Map(in, ${
+            primitiveTransformers.get(
+              prim.name,
+            )
+          }.Decode)`;
           break;
-        case Kind.Enum:
+        }
+        case Kind.Enum: {
           const e = streamIn as Enum;
           rxHandlerIn = `, flux.Map(in, transform.Int32Decode[${e.name}])`;
           break;
-        case Kind.Alias:
+        }
+        case Kind.Alias: {
           const a = streamIn as Alias;
           if (a.type.kind == Kind.Primitive) {
             const p = a.type as Primitive;
-            rxHandlerIn = `, flux.Map(in, transform.${capitalize(
-              p.name
-            )}Decode[${a.name}])`;
+            rxHandlerIn = `, flux.Map(in, transform.${
+              capitalize(
+                p.name,
+              )
+            }Decode[${a.name}])`;
           } else {
             const expanded = expandType(a.type, undefined, undefined, tr);
-            rxHandlerIn = `, flux.Map(in, func(raw payload.Payload) (val ${a.name}, err error) {
+            rxHandlerIn =
+              `, flux.Map(in, func(raw payload.Payload) (val ${a.name}, err error) {
               err = transform.CodecDecode(raw, (*${expanded})(&val))
               return val, err
             })`;
           }
           break;
+        }
         default:
-          rxHandlerIn = `, flux.Map(in, transform.MsgPackDecode[${expandType(
-            streamIn,
-            undefined,
-            false,
-            tr
-          )}])`;
+          rxHandlerIn = `, flux.Map(in, transform.MsgPackDecode[${
+            expandType(
+              streamIn,
+              undefined,
+              false,
+              tr,
+            )
+          }])`;
           break;
       }
     }
 
-    var handlerMethodName = "handler";
+    let handlerMethodName = "handler";
     if (iface) {
       this.write(
         `func ${wrapperName}(svc ${iface.name}) invoke.${rxStyle}Handler {
-          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`
+          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`,
       );
       handlerMethodName = `svc.${methodName(operation, operation.name)}`;
     } else {
       this.write(
         `func ${wrapperName}(handler ${handlerName}) invoke.${rxStyle}Handler {
-          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`
+          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`,
       );
     }
     if (operation.isUnary() && parameters.length > 0) {
@@ -182,7 +189,7 @@ export class WrappersVisitor extends BaseVisitor {
           unaryParam.type,
           undefined,
           false,
-          tr
+          tr,
         );
         this.write(`enumVal, err := transform.Int32.Decode(p)
         if err != nil {
@@ -196,46 +203,54 @@ export class WrappersVisitor extends BaseVisitor {
           unaryParam.type,
           undefined,
           false,
-          tr
+          tr,
         );
-        this.write(`aliasVal, err := transform.${capitalize(
-          primitiveExpanded
-        )}.Decode(p)
+        this.write(`aliasVal, err := transform.${
+          capitalize(
+            primitiveExpanded,
+          )
+        }.Decode(p)
           if err != nil {
             return ${rxPackage}.Error[payload.Payload](err)
           }
           request := ${unaryParamExpanded}(aliasVal)\n`);
       } else if (isObject(unaryParam.type)) {
-        this.write(`var request ${expandType(
-          operation.unaryOp().type,
-          undefined,
-          false,
-          tr
-        )}
+        this.write(`var request ${
+          expandType(
+            operation.unaryOp().type,
+            undefined,
+            false,
+            tr,
+          )
+        }
         if err := transform.CodecDecode(p, &request); err != nil {
           return ${rxPackage}.Error[payload.Payload](err)
         }\n`);
       } else {
         this.write(
           `decoder := msgpack.NewDecoder(p.Data())
-          ${msgpackRead(
-            context,
-            false,
-            "request",
-            true,
-            "",
-            unaryParam.type,
-            false
-          )}`
+          ${
+            msgpackRead(
+              context,
+              false,
+              "request",
+              true,
+              "",
+              unaryParam.type,
+              false,
+            )
+          }`,
         );
         this.write(`if err != nil {
           return ${rxPackage}.Error[payload.Payload](err)
         }\n`);
       }
       this.write(
-        `response := ${handlerMethodName}(ctx, ${returnShare(
-          unaryParam.type
-        )}request${rxHandlerIn})\n`
+        `response := ${handlerMethodName}(ctx, ${
+          returnShare(
+            unaryParam.type,
+          )
+        }request${rxHandlerIn})\n`,
       );
     } else {
       if (parameters.length > 0) {
@@ -246,10 +261,12 @@ export class WrappersVisitor extends BaseVisitor {
         }\n`);
       }
       this.write(
-        `response := ${handlerMethodName}(${msgpackVarAccessParam(
-          "inputArgs",
-          parameters
-        )}${rxHandlerIn})\n`
+        `response := ${handlerMethodName}(${
+          msgpackVarAccessParam(
+            "inputArgs",
+            parameters,
+          )
+        }${rxHandlerIn})\n`,
       );
     }
     let returnType = operation.type;
@@ -262,9 +279,11 @@ export class WrappersVisitor extends BaseVisitor {
     } else if (returnType.kind == Kind.Primitive) {
       const prim = returnType as Primitive;
       this.write(
-        `return ${rxPackage}.Map(response, ${primitiveTransformers.get(
-          prim.name
-        )}.Encode)`
+        `return ${rxPackage}.Map(response, ${
+          primitiveTransformers.get(
+            prim.name,
+          )
+        }.Encode)`,
       );
     } else if (returnType.kind == Kind.Alias) {
       const a = returnType as Alias;
@@ -282,23 +301,25 @@ export class WrappersVisitor extends BaseVisitor {
     } else if (returnType.kind == Kind.Enum) {
       const e = returnType as Enum;
       this.write(
-        `return ${rxPackage}.Map(response, transform.Int32Encode[${e.name}])`
+        `return ${rxPackage}.Map(response, transform.Int32Encode[${e.name}])`,
       );
     } else if (returnType.kind == Kind.List) {
       const l = returnType as List;
       const expanded = expandType(l.type, undefined, undefined, tr);
       this.write(
-        `return mono.Map(response, transform.SliceEncode[${expanded}])`
+        `return mono.Map(response, transform.SliceEncode[${expanded}])`,
       );
     } else if (isObject(returnType)) {
       this.visitWrapperBeforeReturn(context);
       this.write(
-        `return ${rxPackage}.Map(response, transform.MsgPackEncode[${expandType(
-          operation.type,
-          undefined,
-          false,
-          tr
-        )}])\n`
+        `return ${rxPackage}.Map(response, transform.MsgPackEncode[${
+          expandType(
+            operation.type,
+            undefined,
+            false,
+            tr,
+          )
+        }])\n`,
       );
     }
     this.write(`}

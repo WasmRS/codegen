@@ -14,13 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor, Writer } from "@apexlang/core/model";
+import {
+  BaseVisitor,
+  Context,
+  Writer,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
   camelCase,
-  isService,
   InterfaceUsesVisitor,
+  isService,
   UsesVisitor,
-} from "@apexlang/codegen/utils";
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
 
 export class MainVisitor extends BaseVisitor {
   // Overridable visitor implementations
@@ -29,8 +33,7 @@ export class MainVisitor extends BaseVisitor {
   uses: UsesVisitor | undefined = undefined;
 
   visitNamespaceBefore(context: Context): void {
-    const importPath =
-      context.config.import ||
+    const importPath = context.config.import ||
       context.config.module ||
       "github.com/myorg/mymodule/pkg/module";
     super.visitNamespaceBefore(context);
@@ -41,7 +44,7 @@ export class MainVisitor extends BaseVisitor {
     this.write(`package main
 
     import (
-      "github.com/nanobus/iota/go/wasmrs/guest"
+      "github.com/nanobus/iota/go/transport/wasmrs/guest"
 
       "${importPath}"
     )\n\n`);
@@ -56,9 +59,11 @@ export class MainVisitor extends BaseVisitor {
     this.write(`// Create providers\n`);
     this.uses!.dependencies.forEach((dependency) => {
       this.write(
-        `${camelCase(
-          dependency
-        )}Provider := ${packageName}.New${dependency}()\n`
+        `${
+          camelCase(
+            dependency,
+          )
+        }Provider := ${packageName}.New${dependency}()\n`,
       );
     });
 
@@ -68,9 +73,11 @@ export class MainVisitor extends BaseVisitor {
         .map((d) => camelCase(d) + "Provider")
         .join(", ");
       this.write(
-        `${camelCase(
-          service
-        )}Service := ${packageName}.New${service}(${deps})\n`
+        `${
+          camelCase(
+            service,
+          )
+        }Service := ${packageName}.New${service}(${deps})\n`,
       );
     });
 
@@ -90,9 +97,11 @@ class HandlerRegistrationVisitor extends BaseVisitor {
     const { interface: iface } = context;
 
     this.write(
-      `\t\t${packageName}.Register${iface.name}(${camelCase(
-        iface.name
-      )}Service)\n`
+      `\t\t${packageName}.Register${iface.name}(${
+        camelCase(
+          iface.name,
+        )
+      }Service)\n`,
     );
   }
 }

@@ -1,5 +1,3 @@
-import { utils } from "@apexlang/codegen/rust";
-
 import {
   Context,
   Interface,
@@ -7,12 +5,13 @@ import {
   ObjectMap,
   Operation,
   Stream,
-} from "@apexlang/core/model";
-import { convertDescription } from "../utils/conversions.js";
-import { constantCase } from "../utils/index.js";
-import { convertType } from "../utils/types.js";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { utils } from "https://deno.land/x/apex_codegen@v0.1.0/rust/mod.ts";
+import { convertDescription } from "../utils/conversions.ts";
+import { constantCase } from "../utils/mod.ts";
+import { convertType } from "../utils/types.ts";
 
-import { SourceGenerator } from "./base.js";
+import { SourceGenerator } from "./base.ts";
 const { rustify, rustifyCaps, trimLines } = utils;
 
 export class ProviderVisitor extends SourceGenerator<Interface> {
@@ -37,9 +36,11 @@ export class ProviderVisitor extends SourceGenerator<Interface> {
     const comment = convertDescription(this.node.description);
 
     const indexConstants = this.node.operations.map((op, i) => {
-      return `static ${constantCase(
-        `${rootName}_${op.name}`
-      )}_INDEX_BYTES: [u8; 4] = ${this.index + i}u32.to_be_bytes();`;
+      return `static ${
+        constantCase(
+          `${rootName}_${op.name}`,
+        )
+      }_INDEX_BYTES: [u8; 4] = ${this.index + i}u32.to_be_bytes();`;
     });
 
     return `
@@ -59,7 +60,7 @@ pub mod ${module_name} {
       operation,
       this.node.name,
       false,
-      this.config
+      this.config,
     );
     this.imports.push([this.node.name, operation.name]);
 
@@ -70,18 +71,14 @@ pub mod ${module_name} {
 export function convertOperation(
   op: Operation,
   interfaceName: string,
-  global: boolean,
-  config: ObjectMap
+  _global: boolean,
+  config: ObjectMap,
 ): string {
-  const name = rustify(op.name);
-  const indexConstant = constantCase(`${interfaceName}_${name}`);
-
   const comment = convertDescription(op.description);
 
-  const impl =
-    op.type.kind === Kind.Stream
-      ? gen_request_stream(op, interfaceName, config)
-      : gen_request_response(op, interfaceName, config);
+  const impl = op.type.kind === Kind.Stream
+    ? gen_request_stream(op, interfaceName, config)
+    : gen_request_response(op, interfaceName, config);
 
   return `
 ${trimLines([comment])}
@@ -92,7 +89,7 @@ ${impl}
 function gen_request_response(
   op: Operation,
   interfaceName: string,
-  config: ObjectMap
+  config: ObjectMap,
 ): string {
   const name = rustify(op.name);
   const indexConstant = constantCase(`${interfaceName}_${name}`);
@@ -141,7 +138,7 @@ pub(crate) mod ${name} {
 function gen_request_stream(
   op: Operation,
   interfaceName: string,
-  config: ObjectMap
+  config: ObjectMap,
 ): string {
   const name = rustify(op.name);
   const indexConstant = constantCase(`${interfaceName}_${name}`);

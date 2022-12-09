@@ -14,14 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { Context, BaseVisitor } from "@apexlang/core/model";
+import {
+  BaseVisitor,
+  Context,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
   isEvents,
   isProvider,
   isService,
   noCode,
   snakeCase,
-} from "@apexlang/codegen/utils";
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
 
 export class BusVisitor extends BaseVisitor {
   visitNamespaceBefore(context: Context): void {
@@ -149,7 +152,7 @@ class EventsVisitor extends BaseVisitor {
     }
 
     const { namespace: ns, interface: iface, operation } = context;
-    var func = operation.name;
+    let func = operation.name;
     operation.annotation("type", (a) => {
       const v: Value = a.convert();
       func = v.value;
@@ -187,7 +190,7 @@ class ProvidersVisitor extends BaseVisitor {
     const oper = context.operation!;
     const operName = oper.name;
     const cloudEventsType = snakeCase(
-      operName.replace(/^(send|raise|notify)/, "")
+      operName.replace(/^(send|raise|notify)/, ""),
     ).replaceAll("_", ".");
     this.write(`    ${operName}:\n`);
     if (oper.description) {

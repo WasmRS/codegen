@@ -1,3 +1,32 @@
+application:
+  id: undefined
+  version: 0.0.1
+  environment: local
+
+transports:
+  rest:
+    uses: rest
+    with:
+      address: :8080
+      documentation:
+        swaggerUI: true
+        postman: true
+        restClient: true
+  httprpc:
+    uses: httprpc
+    with:
+      address: :9090
+
+compute:
+  - uses: wasmrs
+    with:
+      filename: build/undefined.wasm
+
+specs:
+  - uses: apex
+    with:
+      filename: apex.aidl
+
 # json, msgpack, and xml are built-in codecs.
 # Configure others here.
 codecs:
@@ -41,6 +70,7 @@ resiliency:
     #   timeout: 30s
 
 services:
+  'urlshortener.v1.Shortener':
     # shorten:
     #   name: Shorten a URL and return a generated identifier.
     #   steps:
@@ -60,7 +90,7 @@ providers:
         # - name: Get state
         #   uses: '@dapr/get_state'
         #   with:
-        #     store: statestore
+        #     resource: statestore
         #     key: input.id
         #   retry: database
         #   circuitBreaker: database
@@ -71,7 +101,7 @@ providers:
         # - name: Get state
         #   uses: '@dapr/get_state'
         #   with:
-        #     store: statestore
+        #     resource: statestore
         #     key: input.id
         #   retry: database
         #   circuitBreaker: database
@@ -82,7 +112,7 @@ providers:
         # - name: Save state
         #   uses: '@dapr/set_state'
         #   with:
-        #     store: statestore
+        #     resource: statestore
         #     items:
         #       - key: input.id
         #   retry: database

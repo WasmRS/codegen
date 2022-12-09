@@ -1,9 +1,14 @@
-import { utils } from "@apexlang/codegen/rust";
-import { Context, Interface, ObjectMap, Operation } from "@apexlang/core/model";
-import { convertDescription } from "../utils/conversions.js";
-import { convertType } from "../utils/types.js";
+import {
+  Context,
+  Interface,
+  ObjectMap,
+  Operation,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { utils } from "https://deno.land/x/apex_codegen@v0.1.0/rust/mod.ts";
+import { convertDescription } from "../utils/conversions.ts";
+import { convertType } from "../utils/types.ts";
 
-import { SourceGenerator } from "./base.js";
+import { SourceGenerator } from "./base.ts";
 
 const { rustify, rustifyCaps, trimLines } = utils;
 
@@ -54,7 +59,7 @@ pub mod ${service_module} {
       operation,
       this.node.name,
       false,
-      this.config
+      this.config,
     );
     this.wrappers.push(wrapper);
     this.types.push(types);
@@ -67,8 +72,8 @@ pub mod ${service_module} {
 export function convertOperation(
   op: Operation,
   iface: string,
-  global: boolean,
-  config: ObjectMap
+  _global: boolean,
+  config: ObjectMap,
 ): [string, string, string] {
   const name = rustify(op.name);
   const service_module = `${rustify(iface)}_service`;

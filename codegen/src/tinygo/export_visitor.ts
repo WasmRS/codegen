@@ -24,11 +24,11 @@ import {
   Map,
   Optional,
   Stream,
-} from "@apexlang/core/model";
-import { Import } from "@apexlang/codegen/go";
-import { WrappersVisitor } from "./wrappers_visitor.js";
-import { RegisterVisitor } from "./register_visitor.js";
-import { isHandler } from "@apexlang/codegen/utils";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { Import } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import { isHandler } from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+import { WrappersVisitor } from "./wrappers_visitor.ts";
+import { RegisterVisitor } from "./register_visitor.ts";
 
 export class ExportVisitor extends BaseVisitor {
   visitNamespace(context: Context): void {
@@ -92,10 +92,10 @@ class ImportsVisitor extends BaseVisitor {
 
   visitCheckType(context: Context, t: AnyType): void {
     switch (t.kind) {
-      case Kind.Alias:
+      case Kind.Alias: {
         const a = t as Alias;
-        const aliases =
-          (context.config.aliases as { [key: string]: Import }) || {};
+        const aliases = (context.config.aliases as { [key: string]: Import }) ||
+          {};
         const t2 = aliases[a.name];
         if (t2 && t2.import) {
           this.imports.add(t2.import);
@@ -103,24 +103,29 @@ class ImportsVisitor extends BaseVisitor {
           this.visitCheckType(context, a.type);
         }
         break;
-      case Kind.Stream:
+      }
+      case Kind.Stream: {
         this.imports.add("github.com/nanobus/iota/go/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;
-      case Kind.Optional:
+      }
+      case Kind.Optional: {
         const o = t as Optional;
         this.visitCheckType(context, o.type);
         break;
-      case Kind.List:
+      }
+      case Kind.List: {
         const l = t as List;
         this.visitCheckType(context, l.type);
         break;
-      case Kind.Map:
+      }
+      case Kind.Map: {
         const m = t as Map;
         this.visitCheckType(context, m.keyType);
         this.visitCheckType(context, m.valueType);
         break;
+      }
     }
   }
 }

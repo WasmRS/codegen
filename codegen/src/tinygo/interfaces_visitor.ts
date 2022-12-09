@@ -14,10 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { InterfacesVisitor as GoInterfacesVisitor } from "@apexlang/codegen/go";
-import { Context, Visitor, Writer } from "@apexlang/core/model";
-import { ImportsVisitor } from "./imports_visitor";
-import { InterfaceVisitor } from "./interface_visitor";
+import {
+  Context,
+  Visitor,
+  Writer,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { InterfacesVisitor as GoInterfacesVisitor } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import { ImportsVisitor } from "./imports_visitor.ts";
+import { InterfaceVisitor } from "./interface_visitor.ts";
 
 export class InterfacesVisitor extends GoInterfacesVisitor {
   constructor(writer: Writer) {

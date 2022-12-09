@@ -15,36 +15,35 @@ limitations under the License.
 */
 
 import {
-  Context,
-  BaseVisitor,
+  Alias,
   AnyType,
+  BaseVisitor,
+  Context,
   Kind,
   List,
   Map,
+  Operation,
   Optional,
   Primitive,
-  Alias,
   PrimitiveName,
-  Type,
   Stream,
-  Operation,
-} from "@apexlang/core/model";
+  Type,
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
-  defaultValueForType,
   expandType,
+  Import,
   mapParams,
   methodName,
   receiver,
-  Import,
   translateAlias,
-} from "@apexlang/codegen/go";
+} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
 import {
   camelCase,
   hasServiceCode,
   isOneOfType,
   isVoid,
   noCode,
-} from "@apexlang/codegen/utils";
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
 
 interface Logger {
   import: string;
@@ -115,9 +114,11 @@ class ServiceVisitor extends BaseVisitor {
     if (logger) {
       this.write(`log ${logger.interface}\n`);
     }
-    this.write(`${dependencies
-      .map((e) => camelCase(e) + " " + e)
-      .join("\n\t\t")}
+    this.write(`${
+      dependencies
+        .map((e) => camelCase(e) + " " + e)
+        .join("\n\t\t")
+    }
     }
 
     func New${iface.name}(`);
@@ -127,16 +128,20 @@ class ServiceVisitor extends BaseVisitor {
         this.write(`, `);
       }
     }
-    this.write(`${dependencies
-      .map((e) => camelCase(e) + " " + e)
-      .join(", ")}) *${iface.name}Impl {
+    this.write(`${
+      dependencies
+        .map((e) => camelCase(e) + " " + e)
+        .join(", ")
+    }) *${iface.name}Impl {
       return &${iface.name}Impl{\n`);
     if (logger) {
       this.write("log: log,\n");
     }
-    this.write(`${dependencies
-      .map((e) => camelCase(e) + ": " + camelCase(e) + ",")
-      .join("\n\t\t")}
+    this.write(`${
+      dependencies
+        .map((e) => camelCase(e) + ": " + camelCase(e) + ",")
+        .join("\n\t\t")
+    }
       }
     }\n\n`);
   }
@@ -152,14 +157,16 @@ class ServiceVisitor extends BaseVisitor {
     }
     this.write(`\n`);
     this.write(
-      `func (${receiver(iface)} *${iface.name}Impl) ${methodName(
-        operation,
-        operation.name
-      )}(`
+      `func (${receiver(iface)} *${iface.name}Impl) ${
+        methodName(
+          operation,
+          operation.name,
+        )
+      }(`,
     );
     const translate = translateAlias(context);
     this.write(
-      `${mapParams(context, operation.parameters, undefined, translate)})`
+      `${mapParams(context, operation.parameters, undefined, translate)})`,
     );
     if (!isVoid(operation.type)) {
       let t = operation.type;
@@ -185,13 +192,12 @@ class ServiceVisitor extends BaseVisitor {
         rxWrapper = `flux`;
       }
       const expanded = expandType(operation.type, undefined, true, translate);
-      const dv = defaultValueForType(context, operation.type, undefined);
       this.write(
-        `  return ${rxWrapper}.Error[${expanded}](errors.New("not_implemented"))\n`
+        `  return ${rxWrapper}.Error[${expanded}](errors.New("not_implemented"))\n`,
       );
     } else {
       this.write(
-        `  return mono.Error[struct{}](errors.New("not_implemented"))\n`
+        `  return mono.Error[struct{}](errors.New("not_implemented"))\n`,
       );
     }
     this.write(`}\n`);
@@ -202,7 +208,7 @@ class ImportsVisitor extends BaseVisitor {
   private imports: { [key: string]: Import } = {};
   private externalImports: { [key: string]: Import } = {};
 
-  visitNamespaceAfter(context: Context): void {
+  visitNamespaceAfter(_context: Context): void {
     const stdLib = [];
     for (const key in this.imports) {
       const i = this.imports[key];
@@ -286,7 +292,7 @@ class ImportsVisitor extends BaseVisitor {
         break;
       }
 
-      case Kind.Primitive:
+      case Kind.Primitive: {
         const prim = type as Primitive;
         switch (prim.name) {
           case PrimitiveName.DateTime:
@@ -297,7 +303,8 @@ class ImportsVisitor extends BaseVisitor {
             break;
         }
         break;
-      case Kind.Type:
+      }
+      case Kind.Type: {
         const named = type as Type;
         const i = aliases[named.name];
         if (named.name === "datetime" && i == undefined) {
@@ -309,20 +316,24 @@ class ImportsVisitor extends BaseVisitor {
         }
         this.addType(named.name, i);
         break;
-      case Kind.List:
+      }
+      case Kind.List: {
         const list = type as List;
         this.checkType(context, list.type);
         break;
-      case Kind.Map:
+      }
+      case Kind.Map: {
         const map = type as Map;
         this.checkType(context, map.keyType);
         this.checkType(context, map.valueType);
         break;
-      case Kind.Optional:
+      }
+      case Kind.Optional: {
         const optional = type as Optional;
         this.checkType(context, optional.type);
         break;
-      case Kind.Stream:
+      }
+      case Kind.Stream: {
         const stream = type as Stream;
         this.addType("flux", {
           type: "flux.Flux",
@@ -330,8 +341,10 @@ class ImportsVisitor extends BaseVisitor {
         });
         this.checkType(context, stream.type);
         break;
-      case Kind.Enum:
+      }
+      case Kind.Enum: {
         break;
+      }
     }
   }
 }

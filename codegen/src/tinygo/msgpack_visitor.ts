@@ -27,17 +27,20 @@ import {
   PrimitiveName,
   Stream,
   Writer,
-} from "@apexlang/core/model";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
   convertOperationToType,
   convertUnionToType,
-} from "@apexlang/codegen/utils";
-import { Import, StructVisitor } from "@apexlang/codegen/go";
-import { MsgPackDecoderVisitor } from "./msgpack_decoder_visitor";
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+import {
+  Import,
+  StructVisitor,
+} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import { MsgPackDecoderVisitor } from "./msgpack_decoder_visitor.ts";
 import {
   MsgPackEncoderUnionVisitor,
   MsgPackEncoderVisitor,
-} from "./msgpack_encoder_visitor";
+} from "./msgpack_encoder_visitor.ts";
 
 export class MsgPackVisitor extends BaseVisitor {
   constructor(writer: Writer) {
@@ -45,7 +48,7 @@ export class MsgPackVisitor extends BaseVisitor {
     const operArgs = (context: Context): void => {
       const { interface: iface, operation } = context;
       const parameters = operation.parameters.filter(
-        (p) => p.type.kind != Kind.Stream
+        (p) => p.type.kind != Kind.Stream,
       );
       if (parameters.length == 0 || operation.isUnary()) {
         return;
@@ -135,18 +138,19 @@ class ImportsVisitor extends BaseVisitor {
     this.checkType(context, field.type);
   }
 
-  checkType(context: Context, t: AnyType, argument: boolean = false): void {
+  checkType(context: Context, t: AnyType, argument = false): void {
     switch (t.kind) {
-      case Kind.Primitive:
+      case Kind.Primitive: {
         const p = t as Primitive;
         if (argument && p.name == PrimitiveName.DateTime) {
           this.imports.add("time");
         }
         break;
-      case Kind.Alias:
+      }
+      case Kind.Alias: {
         const a = t as Alias;
-        const aliases =
-          (context.config.aliases as { [key: string]: Import }) || {};
+        const aliases = (context.config.aliases as { [key: string]: Import }) ||
+          {};
         const t2 = aliases[a.name];
         if (t2 && t2.import) {
           this.imports.add(t2.import);
@@ -154,23 +158,28 @@ class ImportsVisitor extends BaseVisitor {
           this.checkType(context, a.type, argument);
         }
         break;
-      case Kind.Stream:
+      }
+      case Kind.Stream: {
         const s = t as Stream;
         this.checkType(context, s.type, argument);
         break;
-      case Kind.Optional:
+      }
+      case Kind.Optional: {
         const o = t as Optional;
         this.checkType(context, o.type, argument);
         break;
-      case Kind.List:
+      }
+      case Kind.List: {
         const l = t as List;
         this.checkType(context, l.type, argument);
         break;
-      case Kind.Map:
+      }
+      case Kind.Map: {
         const m = t as Map;
         this.checkType(context, m.keyType, argument);
         this.checkType(context, m.valueType, argument);
         break;
+      }
     }
   }
 }

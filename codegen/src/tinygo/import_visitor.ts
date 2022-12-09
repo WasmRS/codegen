@@ -27,15 +27,19 @@ import {
   PrimitiveName,
   Stream,
   Writer,
-} from "@apexlang/core/model";
+} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
 import {
   Import,
   methodName,
   setExpandStreamPattern,
-} from "@apexlang/codegen/go";
-import { isHandler, isProvider, noCode } from "@apexlang/codegen/utils";
-import { InvokersVisitor } from "./invokers_visitor.js";
-import { getOperationParts } from "./utilities.js";
+} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import {
+  isHandler,
+  isProvider,
+  noCode,
+} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+import { InvokersVisitor } from "./invokers_visitor.ts";
+import { getOperationParts } from "./utilities.ts";
 
 export class ImportBaseVisitor extends BaseVisitor {
   private hasAny: (context: Context) => boolean;
@@ -44,14 +48,14 @@ export class ImportBaseVisitor extends BaseVisitor {
   constructor(
     writer: Writer,
     hasAny: (context: Context) => boolean,
-    filter: (context: Context) => boolean
+    filter: (context: Context) => boolean,
   ) {
     super(writer);
     this.hasAny = hasAny;
     this.filter = filter;
   }
 
-  visitContextBefore(context: Context): void {
+  visitContextBefore(_context: Context): void {
     setExpandStreamPattern("flux.Flux[{{type}}]");
   }
 
@@ -107,9 +111,9 @@ export class ImportBaseVisitor extends BaseVisitor {
     importedFuncs.forEach((f) => {
       const parts = getOperationParts(f);
       this.write(
-        `_op${methodName(f, f.name)} = invoke.Import${parts.type}("${
-          ns.name
-        }", "${f.name}")\n`
+        `_op${
+          methodName(f, f.name)
+        } = invoke.Import${parts.type}("${ns.name}", "${f.name}")\n`,
       );
     });
 
@@ -149,7 +153,7 @@ export class ProviderVisitor extends ImportBaseVisitor {
       writer,
       (context: Context): boolean => {
         const { namespace: ns } = context;
-        for (let name in ns.interfaces) {
+        for (const name in ns.interfaces) {
           const iface = ns.interfaces[name];
           if (!iface.annotation("provider")) {
             continue;
@@ -162,7 +166,7 @@ export class ProviderVisitor extends ImportBaseVisitor {
             return true;
           }
         }
-        for (let name in ns.functions) {
+        for (const name in ns.functions) {
           const iface = ns.functions[name];
           if (iface.annotation("provider")) {
             return true;
@@ -172,7 +176,7 @@ export class ProviderVisitor extends ImportBaseVisitor {
       },
       (context: Context): boolean => {
         return !isProvider(context) || noCode(context.operation);
-      }
+      },
     );
   }
 }
@@ -183,13 +187,13 @@ export class ImportVisitor extends ImportBaseVisitor {
       writer,
       (context: Context): boolean => {
         const { namespace: ns } = context;
-        for (let name in ns.interfaces) {
+        for (const name in ns.interfaces) {
           const iface = ns.interfaces[name];
           if (iface.annotation("service")) {
             return true;
           }
         }
-        for (let name in ns.functions) {
+        for (const name in ns.functions) {
           const iface = ns.functions[name];
           if (iface.annotation("service")) {
             return true;
@@ -199,7 +203,7 @@ export class ImportVisitor extends ImportBaseVisitor {
       },
       (context: Context): boolean => {
         return !isHandler(context);
-      }
+      },
     );
   }
 }
@@ -215,7 +219,7 @@ class ProviderStructVisitor extends BaseVisitor {
     this.write(`op${methodName(operation, operation.name)} uint32\n`);
   }
 
-  visitInterfaceAfter(context: Context): void {
+  visitInterfaceAfter(_context: Context): void {
     this.write(`}\n\n`);
   }
 }
@@ -231,13 +235,13 @@ class ProviderNewVisitor extends BaseVisitor {
     const { namespace: ns, interface: iface, operation } = context;
     const parts = getOperationParts(operation);
     this.write(
-      `op${methodName(operation, operation.name)}: invoke.Import${
-        parts.type
-      }("${ns.name}.${iface.name}", "${operation.name}"),\n`
+      `op${
+        methodName(operation, operation.name)
+      }: invoke.Import${parts.type}("${ns.name}.${iface.name}", "${operation.name}"),\n`,
     );
   }
 
-  visitInterfaceAfter(context: Context): void {
+  visitInterfaceAfter(_context: Context): void {
     this.write(`}
     }\n\n`);
   }
@@ -280,16 +284,17 @@ class ImportsVisitor extends BaseVisitor {
 
   visitCheckType(context: Context, t: AnyType): void {
     switch (t.kind) {
-      case Kind.Primitive:
+      case Kind.Primitive: {
         const p = t as Primitive;
         if (p.name == PrimitiveName.DateTime) {
           this.stdLibs.add("time");
         }
         break;
-      case Kind.Alias:
+      }
+      case Kind.Alias: {
         const a = t as Alias;
-        const aliases =
-          (context.config.aliases as { [key: string]: Import }) || {};
+        const aliases = (context.config.aliases as { [key: string]: Import }) ||
+          {};
         const t2 = aliases[a.name];
         if (t2 && t2.import) {
           this.imports.add(t2.import);
@@ -297,24 +302,29 @@ class ImportsVisitor extends BaseVisitor {
           this.visitCheckType(context, a.type);
         }
         break;
-      case Kind.Stream:
+      }
+      case Kind.Stream: {
         this.imports.add("github.com/nanobus/iota/go/rx/flux");
         const s = t as Stream;
         this.visitCheckType(context, s.type);
         break;
-      case Kind.Optional:
+      }
+      case Kind.Optional: {
         const o = t as Optional;
         this.visitCheckType(context, o.type);
         break;
-      case Kind.List:
+      }
+      case Kind.List: {
         const l = t as List;
         this.visitCheckType(context, l.type);
         break;
-      case Kind.Map:
+      }
+      case Kind.Map: {
         const m = t as Map;
         this.visitCheckType(context, m.keyType);
         this.visitCheckType(context, m.valueType);
         break;
+      }
     }
   }
 }
