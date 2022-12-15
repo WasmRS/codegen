@@ -14,17 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  BaseVisitor,
-  Context,
-  Writer,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { BaseVisitor, Context, Writer } from "../deps/core/model.ts";
 import {
   camelCase,
   InterfaceUsesVisitor,
   isService,
   UsesVisitor,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/utils.ts";
 
 export class MainVisitor extends BaseVisitor {
   // Overridable visitor implementations

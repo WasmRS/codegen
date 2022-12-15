@@ -23,7 +23,7 @@ import {
   List,
   Primitive,
   Stream,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   expandType,
   methodName,
@@ -32,7 +32,7 @@ import {
   returnShare,
   setExpandStreamPattern,
   translateAlias,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/codegen/go.ts";
 import {
   capitalize,
   isHandler,
@@ -42,7 +42,7 @@ import {
   noCode,
   operationArgsType,
   uncapitalize,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/utils.ts";
 import { primitiveTransformers } from "./constants.ts";
 
 export class WrappersVisitor extends BaseVisitor {

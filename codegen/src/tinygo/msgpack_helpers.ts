@@ -27,7 +27,7 @@ import {
   Parameter,
   Primitive,
   PrimitiveName,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   expandType,
   fieldName,
@@ -35,7 +35,7 @@ import {
   returnShare,
   translateAlias,
   translations,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/codegen/go.ts";
 import {
   msgpackCastFuncs,
   msgpackCastNillableFuncs,

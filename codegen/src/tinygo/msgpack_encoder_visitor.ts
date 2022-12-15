@@ -14,11 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  BaseVisitor,
-  Context,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { fieldName } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+import { BaseVisitor, Context } from "../deps/core/model.ts";
+import { fieldName } from "../deps/codegen/go.ts";
 import { msgpackEncode } from "./msgpack_helpers.ts";
 
 export class MsgPackEncoderVisitor extends BaseVisitor {

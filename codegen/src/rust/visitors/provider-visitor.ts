@@ -5,8 +5,8 @@ import {
   ObjectMap,
   Operation,
   Stream,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { utils } from "https://deno.land/x/apex_codegen@v0.1.0/rust/mod.ts";
+} from "../../deps/core/model.ts";
+import { utils } from "../../deps/codegen/rust.ts";
 import { convertDescription } from "../utils/conversions.ts";
 import { constantCase } from "../utils/mod.ts";
 import { convertType } from "../utils/types.ts";

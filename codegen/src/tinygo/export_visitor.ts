@@ -24,9 +24,9 @@ import {
   Map,
   Optional,
   Stream,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { Import } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
-import { isHandler } from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/core/model.ts";
+import { Import } from "../deps/codegen/go.ts";
+import { isHandler } from "../deps/codegen/utils.ts";
 import { WrappersVisitor } from "./wrappers_visitor.ts";
 import { RegisterVisitor } from "./register_visitor.ts";
 

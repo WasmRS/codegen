@@ -1,4 +1,4 @@
-import { noCase } from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+import { noCase } from "../../deps/codegen/utils.ts";
 export * as types from "./types.ts";
 export * as convert from "./conversions.ts";
 

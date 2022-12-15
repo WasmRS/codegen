@@ -1,8 +1,5 @@
-import {
-  ObjectMap,
-  Parameter,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { utils } from "https://deno.land/x/apex_codegen@v0.1.0/rust/mod.ts";
+import { ObjectMap, Parameter } from "../../deps/core/model.ts";
+import { utils } from "../../deps/codegen/rust.ts";
 import { convertType } from "./types.ts";
 
 /**

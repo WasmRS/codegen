@@ -27,15 +27,12 @@ import {
   PrimitiveName,
   Stream,
   Writer,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   convertOperationToType,
   convertUnionToType,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
-import {
-  Import,
-  StructVisitor,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/codegen/utils.ts";
+import { Import, StructVisitor } from "../deps/codegen/go.ts";
 import { MsgPackDecoderVisitor } from "./msgpack_decoder_visitor.ts";
 import {
   MsgPackEncoderUnionVisitor,

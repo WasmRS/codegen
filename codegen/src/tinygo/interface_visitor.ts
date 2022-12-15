@@ -14,19 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  Context,
-  Kind,
-  Stream,
-  Writer,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { Context, Kind, Stream, Writer } from "../deps/core/model.ts";
 import {
   expandType,
   InterfaceVisitor as GoInterfaceVisitor,
   setExpandStreamPattern,
   translateAlias,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
-import { isVoid } from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/go.ts";
+import { isVoid } from "../deps/codegen/utils.ts";
 
 export class InterfaceVisitor extends GoInterfaceVisitor {
   constructor(writer: Writer) {

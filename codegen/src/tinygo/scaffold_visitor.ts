@@ -28,7 +28,7 @@ import {
   PrimitiveName,
   Stream,
   Type,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   expandType,
   Import,
@@ -36,14 +36,14 @@ import {
   methodName,
   receiver,
   translateAlias,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/codegen/go.ts";
 import {
   camelCase,
   hasServiceCode,
   isOneOfType,
   isVoid,
   noCode,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/utils.ts";
 
 interface Logger {
   import: string;

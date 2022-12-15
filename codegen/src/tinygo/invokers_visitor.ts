@@ -24,7 +24,7 @@ import {
   Named,
   Primitive,
   Stream,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   expandType,
   fieldName,
@@ -32,14 +32,14 @@ import {
   methodName,
   parameterName,
   translateAlias,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/codegen/go.ts";
 import {
   capitalize,
   isObject,
   isPrimitive,
   isVoid,
   operationArgsType,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/utils.ts";
 import { getOperationParts } from "./utilities.ts";
 import { primitiveTransformers } from "./constants.ts";
 

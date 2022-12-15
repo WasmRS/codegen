@@ -1,8 +1,5 @@
-import {
-  AnyType,
-  ObjectMap,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { utils } from "https://deno.land/x/apex_codegen@v0.1.0/rust/mod.ts";
+import { AnyType, ObjectMap } from "../../deps/core/model.ts";
+import { utils } from "../../deps/codegen/rust.ts";
 
 /**
  * Convert an Apex type to a type suitable for the destination format.

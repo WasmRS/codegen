@@ -27,17 +27,13 @@ import {
   PrimitiveName,
   Stream,
   Writer,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+} from "../deps/core/model.ts";
 import {
   Import,
   methodName,
   setExpandStreamPattern,
-} from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
-import {
-  isHandler,
-  isProvider,
-  noCode,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/go.ts";
+import { isHandler, isProvider, noCode } from "../deps/codegen/utils.ts";
 import { InvokersVisitor } from "./invokers_visitor.ts";
 import { getOperationParts } from "./utilities.ts";
 

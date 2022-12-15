@@ -14,17 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  BaseVisitor,
-  Context,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
+import { BaseVisitor, Context } from "../deps/core/model.ts";
 import {
   isEvents,
   isProvider,
   isService,
   noCode,
   snakeCase,
-} from "https://deno.land/x/apex_codegen@v0.1.0/utils/mod.ts";
+} from "../deps/codegen/utils.ts";
 
 export class BusVisitor extends BaseVisitor {
   visitNamespaceBefore(context: Context): void {

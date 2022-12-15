@@ -20,8 +20,8 @@ import {
   Kind,
   Operation,
   Stream,
-} from "https://deno.land/x/apex_core@v0.1.0/model/mod.ts";
-import { ImportsVisitor as GoImportsVisitor } from "https://deno.land/x/apex_codegen@v0.1.0/go/mod.ts";
+} from "../deps/core/model.ts";
+import { ImportsVisitor as GoImportsVisitor } from "../deps/codegen/go.ts";
 
 export class ImportsVisitor extends GoImportsVisitor {
   checkType(context: Context, type: AnyType): void {
