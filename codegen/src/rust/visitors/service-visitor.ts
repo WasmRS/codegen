@@ -3,16 +3,21 @@ import {
   Interface,
   ObjectMap,
   Operation,
-} from "../../deps/core/model.ts";
-import { utils } from "../../deps/codegen/rust.ts";
-import { convertDescription } from "../utils/conversions.ts";
-import { convertType } from "../utils/types.ts";
+} from '../deps/apex_model.ts';
+import { rust } from '../deps/apex_codegen.ts';
+import { convertDescription } from '../utils/conversions.ts';
+import { convertType } from '../utils/types.ts';
 
-import { SourceGenerator } from "./base.ts";
+import { SourceGenerator } from './base.ts';
 
-const { rustify, rustifyCaps, trimLines } = utils;
+const { rustify, rustifyCaps, trimLines } = rust.utils;
+
+interface OperationDetails {
+  traitSignature: string;
+}
 
 export class ServiceVisitor extends SourceGenerator<Interface> {
+  ops: Record<string, OperationDetails> = {};
   exports: [string, string][] = [];
   wrappers: string[] = [];
   types: string[] = [];
@@ -24,19 +29,27 @@ export class ServiceVisitor extends SourceGenerator<Interface> {
 
   buffer(): string {
     const rootName = rustifyCaps(this.node.name);
+    const iface = `${rustify(this.node.name)}`;
     const componentName = `${rootName}Component`;
     const serviceName = `${rootName}Service`;
-    const service_module = `${rustify(this.node.name)}_service`;
+    const service_module = `${iface}_service`;
 
     const innerSource = this.writer.string();
 
     const comment = convertDescription(this.node.description);
 
+    const traitImpls = Object.entries(this.ops)
+      .map(([name, deets]) => {
+        const rusty_name = rustify(name);
+        return `${deets.traitSignature} {Ok(crate::actions::${iface}::${rusty_name}::task(inputs.await?).await?)}`;
+      })
+      .join('\n');
+
     return `
 pub(crate) struct ${componentName}();
 
 impl ${componentName} {
-  ${this.wrappers.join("\n")}
+  ${this.wrappers.join('\n')}
 }
 
 #[async_trait::async_trait(?Send)]
@@ -45,9 +58,14 @@ pub(crate) trait ${serviceName} {
   ${innerSource}
 }
 
+#[async_trait::async_trait(?Send)]
+impl ${serviceName} for ${componentName} {
+    ${traitImpls}
+}
+
 pub mod ${service_module} {
   use super::*;
-  ${this.types.join("\n")}
+  ${this.types.join('\n')}
 }
 `;
   }
@@ -59,13 +77,16 @@ pub mod ${service_module} {
       operation,
       this.node.name,
       false,
-      this.config,
+      this.config
     );
+    this.ops[operation.name] ||= {
+      traitSignature: traitFn,
+    };
     this.wrappers.push(wrapper);
     this.types.push(types);
     this.exports.push([this.node.name, operation.name]);
 
-    this.write(traitFn);
+    this.write(`${traitFn};`);
   }
 }
 
@@ -73,7 +94,7 @@ export function convertOperation(
   op: Operation,
   iface: string,
   _global: boolean,
-  config: ObjectMap,
+  config: ObjectMap
 ): [string, string, string] {
   const name = rustify(op.name);
   const service_module = `${rustify(iface)}_service`;
@@ -85,7 +106,7 @@ export function convertOperation(
 ${trimLines([comment])}
 async fn ${name}(
   inputs: Mono<${service_module}::${name}::Inputs, PayloadError>,
-) -> Result<${service_module}::${name}::Outputs, GenericError>;
+) -> Result<${service_module}::${name}::Outputs, GenericError>
 `;
 
   const wrapper = `
@@ -113,7 +134,7 @@ fn ${name}_wrapper(input: IncomingMono) -> Result<OutgoingMono, GenericError> {
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
   `;
     })
-    .join("\n");
+    .join('\n');
 
   const types = `
 pub mod ${name} {

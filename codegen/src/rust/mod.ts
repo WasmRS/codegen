@@ -1,5 +1,5 @@
-export { DefaultVisitor as default } from "./default-visitor.ts";
-export { DefaultVisitor } from "./default-visitor.ts";
+import DefaultVisitor from "./default-visitor.ts";
+export default DefaultVisitor;
 
 export * as utils from "./utils/mod.ts";
 export * as visitors from "./visitors/mod.ts";

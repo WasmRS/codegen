@@ -1,7 +1,6 @@
 import { constantCase } from "../src/rust/utils/mod.ts";
+import { assertEquals } from "./deps.ts";
 
-describe("utils", () => {
-  test("constantCase", () => {
-    expect(constantCase("myId")).toEqual(`MY_ID`);
-  });
+Deno.test("constantCase", () => {
+  assertEquals(constantCase("myId"), "MY_ID");
 });

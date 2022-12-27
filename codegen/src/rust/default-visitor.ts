@@ -1,12 +1,15 @@
-import { Context } from "../deps/core/model.ts";
+import * as model from './deps/apex_model.ts';
+import * as codegen from './deps/apex_codegen.ts';
+import { ServiceVisitor } from './visitors/service-visitor.ts';
+import { ProviderVisitor } from './visitors/provider-visitor.ts';
+import { constantCase } from './utils/mod.ts';
+import { getTemplate } from './templates.ts';
 
-import { RustBasic, utils } from "../deps/codegen/rust.ts";
-import { ServiceVisitor } from "./visitors/service-visitor.ts";
-import { ProviderVisitor } from "./visitors/provider-visitor.ts";
-import { constantCase } from "./utils/mod.ts";
+type Context = model.Context;
+const utils = codegen.rust.utils;
 
-export class DefaultVisitor extends RustBasic {
-  namespace = "";
+export default class DefaultVisitor extends codegen.rust.RustBasic {
+  namespace = '';
   exports: [string, string][] = [];
   imports: [string, string][] = [];
 
@@ -17,21 +20,19 @@ export class DefaultVisitor extends RustBasic {
 
   visitContextBefore(context: Context): void {
     super.visitContextBefore(context);
-    this.append(`
-use wasmrs_guest::FutureExt;
+    this.append(getTemplate('prelude'));
 
-use wasmrs_guest::*;
-
-#[no_mangle]
-extern "C" fn __wasmrs_init(
-    guest_buffer_size: u32,
-    host_buffer_size: u32,
-    max_host_frame_len: u32,
-) {
-    init_exports();
-    init_imports();
-    wasmrs_guest::init(guest_buffer_size, host_buffer_size, max_host_frame_len);
-}`);
+    if (context.config.modules) {
+      Object.entries(
+        context.config.modules as Record<string, string[]>
+      ).forEach(([iface, actions]: [string, string[]]) => {
+        this.write(`
+        pub(crate) mod ${iface} {
+          ${actions.map((a) => `pub(crate) mod ${a};`).join('\n')}
+        }
+        `);
+      });
+    }
   }
 
   visitContextAfter(context: Context): void {
@@ -39,39 +40,38 @@ extern "C" fn __wasmrs_init(
 
     const imports = this.imports.map(([iface, op]) => {
       const importConstant = constantCase(`${iface}_${op}`);
+
       return `
-wasmrs_guest::add_import(
-  u32::from_be_bytes(${importConstant}_INDEX_BYTES),OperationType::RequestResponse,"${this.namespace}.${iface}","${op}",
-);`;
+      wasmrs_guest::add_import(
+        u32::from_be_bytes(${importConstant}_INDEX_BYTES),OperationType::RequestResponse,"${this.namespace}.${iface}","${op}",
+      );`;
     });
 
     const exports = this.exports.map(([iface, op]) => {
       return `
-wasmrs_guest::register_request_response(
-  "${this.namespace}.${iface}","${op}",${
-        utils.rustifyCaps(
-          `${iface}Component`,
-        )
-      }::${utils.rustify(op)}_wrapper,
-);`;
+      wasmrs_guest::register_request_response(
+        "${this.namespace}.${iface}","${op}",${utils.rustifyCaps(
+        `${iface}Component`
+      )}::${utils.rustify(op)}_wrapper,
+      );`;
     });
 
     this.write(`
 pub(crate) fn init_imports() {
-  ${imports.join("\n")}
+  ${imports.join('\n')}
 }
 pub(crate) fn init_exports() {
-  ${exports.join("\n")}
+  ${exports.join('\n')}
 }
     `);
   }
 
   visitInterface(context: Context): void {
-    if (context.interface.annotation("service")) {
+    if (context.interface.annotation('service')) {
       const visitor = new ServiceVisitor(context);
       this.exports.push(...visitor.exports);
       this.append(visitor.buffer());
-    } else if (context.interface.annotation("provider")) {
+    } else if (context.interface.annotation('provider')) {
       const visitor = new ProviderVisitor(context, this.imports.length);
       this.imports.push(...visitor.imports);
       this.append(visitor.buffer());

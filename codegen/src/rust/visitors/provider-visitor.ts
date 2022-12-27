@@ -5,14 +5,14 @@ import {
   ObjectMap,
   Operation,
   Stream,
-} from "../../deps/core/model.ts";
-import { utils } from "../../deps/codegen/rust.ts";
-import { convertDescription } from "../utils/conversions.ts";
-import { constantCase } from "../utils/mod.ts";
-import { convertType } from "../utils/types.ts";
+} from '../deps/apex_model.ts';
+import { rust } from '../deps/apex_codegen.ts';
+import { convertDescription } from '../utils/conversions.ts';
+import { constantCase } from '../utils/mod.ts';
+import { convertType } from '../utils/types.ts';
 
-import { SourceGenerator } from "./base.ts";
-const { rustify, rustifyCaps, trimLines } = utils;
+import { SourceGenerator } from './base.ts';
+const { rustify, rustifyCaps, trimLines } = rust.utils;
 
 export class ProviderVisitor extends SourceGenerator<Interface> {
   index = 0;
@@ -36,15 +36,13 @@ export class ProviderVisitor extends SourceGenerator<Interface> {
     const comment = convertDescription(this.node.description);
 
     const indexConstants = this.node.operations.map((op, i) => {
-      return `static ${
-        constantCase(
-          `${rootName}_${op.name}`,
-        )
-      }_INDEX_BYTES: [u8; 4] = ${this.index + i}u32.to_be_bytes();`;
+      return `static ${constantCase(
+        `${rootName}_${op.name}`
+      )}_INDEX_BYTES: [u8; 4] = ${this.index + i}u32.to_be_bytes();`;
     });
 
     return `
-${indexConstants.join("\n")}
+${indexConstants.join('\n')}
 ${trimLines([comment])}
 pub mod ${module_name} {
   use super::*;
@@ -60,7 +58,7 @@ pub mod ${module_name} {
       operation,
       this.node.name,
       false,
-      this.config,
+      this.config
     );
     this.imports.push([this.node.name, operation.name]);
 
@@ -72,13 +70,14 @@ export function convertOperation(
   op: Operation,
   interfaceName: string,
   _global: boolean,
-  config: ObjectMap,
+  config: ObjectMap
 ): string {
   const comment = convertDescription(op.description);
 
-  const impl = op.type.kind === Kind.Stream
-    ? gen_request_stream(op, interfaceName, config)
-    : gen_request_response(op, interfaceName, config);
+  const impl =
+    op.type.kind === Kind.Stream
+      ? gen_request_stream(op, interfaceName, config)
+      : gen_request_response(op, interfaceName, config);
 
   return `
 ${trimLines([comment])}
@@ -89,7 +88,7 @@ ${impl}
 function gen_request_response(
   op: Operation,
   interfaceName: string,
-  config: ObjectMap,
+  config: ObjectMap
 ): string {
   const name = rustify(op.name);
   const indexConstant = constantCase(`${interfaceName}_${name}`);
@@ -101,10 +100,10 @@ function gen_request_response(
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config, true, "'a")},
   `;
     })
-    .join("\n");
+    .join('\n');
 
-  const lifetime = op.parameters.length > 0 ? "<'a>" : "";
-  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : "";
+  const lifetime = op.parameters.length > 0 ? "<'a>" : '';
+  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : '';
 
   return `
 pub(crate) fn ${name}(
@@ -138,7 +137,7 @@ pub(crate) mod ${name} {
 function gen_request_stream(
   op: Operation,
   interfaceName: string,
-  config: ObjectMap,
+  config: ObjectMap
 ): string {
   const name = rustify(op.name);
   const indexConstant = constantCase(`${interfaceName}_${name}`);
@@ -150,10 +149,10 @@ function gen_request_stream(
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config, true, "'a")},
   `;
     })
-    .join("\n");
+    .join('\n');
 
-  const lifetime = op.parameters.length > 0 ? "<'a>" : "";
-  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : "";
+  const lifetime = op.parameters.length > 0 ? "<'a>" : '';
+  const lifetimeIn = op.parameters.length > 0 ? "<'_>" : '';
 
   return `
 pub(crate) fn ${name}(
