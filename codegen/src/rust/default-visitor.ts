@@ -3,7 +3,6 @@ import * as codegen from './deps/apex_codegen.ts';
 import { ServiceVisitor } from './visitors/service-visitor.ts';
 import { ProviderVisitor } from './visitors/provider-visitor.ts';
 import { constantCase } from './utils/mod.ts';
-import { getTemplate } from './templates.ts';
 
 type Context = model.Context;
 const utils = codegen.rust.utils;
@@ -20,7 +19,21 @@ export default class DefaultVisitor extends codegen.rust.RustBasic {
 
   visitContextBefore(context: Context): void {
     super.visitContextBefore(context);
-    this.append(getTemplate('prelude'));
+    this.append(`
+use wasmrs_guest::FutureExt;
+
+use wasmrs_guest::*;
+
+#[no_mangle]
+extern "C" fn __wasmrs_init(
+    guest_buffer_size: u32,
+    host_buffer_size: u32,
+    max_host_frame_len: u32,
+) {
+    init_exports();
+    init_imports();
+    wasmrs_guest::init(guest_buffer_size, host_buffer_size, max_host_frame_len);
+}`);
 
     if (context.config.modules) {
       Object.entries(
