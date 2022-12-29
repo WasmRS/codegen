@@ -64,6 +64,7 @@ impl ${serviceName} for ${componentName} {
 }
 
 pub mod ${service_module} {
+  #[allow(unused_imports)]
   use super::*;
   ${this.types.join('\n')}
 }
@@ -138,6 +139,7 @@ fn ${name}_wrapper(input: IncomingMono) -> Result<OutgoingMono, GenericError> {
 
   const types = `
 pub mod ${name} {
+  #[allow(unused_imports)]
   use super::*;
   #[derive(serde::Deserialize, Debug)]
   pub(crate) struct Inputs {
