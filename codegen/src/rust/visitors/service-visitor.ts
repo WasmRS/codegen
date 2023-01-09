@@ -119,7 +119,7 @@ fn ${name}_wrapper(input: IncomingMono) -> Result<OutgoingMono, GenericError> {
       ${name}(input)
       .map(|result| {
           let output = result?;
-          Ok(serialize(&output).map(|bytes| Payload::new_optional(None, Some(bytes.into())))?)
+          Ok(serialize(&output).map(|bytes| Payload::new_data(None, Some(bytes.into())))?)
       })
       .map(|output| tx.send(output).unwrap());
 
