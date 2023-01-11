@@ -3,6 +3,7 @@ import {
   Interface,
   ObjectMap,
   Operation,
+  Parameter,
 } from "../deps/apex_model.ts";
 import { rust } from "../deps/apex_codegen.ts";
 import { convertDescription } from "../utils/conversions.ts";
@@ -238,25 +239,39 @@ export function convertOperation(
     throw new Error("unreachable");
   }
 
-  const inputFields = op.parameters
-    .map((p) => {
-      return `
+  let types;
+  if (variant === ActionKind.RequestChannel) {
+    const arg = op.parameters[0] as Parameter;
+    types = `
+      pub mod ${name} {
+        #[allow(unused_imports)]
+        pub(crate) use super::*;
+
+        pub(crate) type Inputs = ${convertType(arg.type, config)};
+
+        pub(crate) type Outputs = ${convertType(op.type, config)};
+      }  `;
+  } else {
+    const inputFields = op.parameters
+      .map((p) => {
+        return `
   #[serde(rename = "${p.name}")]
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
   `;
-    })
-    .join("\n");
+      })
+      .join("\n");
+    types = `
+      pub mod ${name} {
+        #[allow(unused_imports)]
+        pub(crate) use super::*;
+        #[derive(serde::Deserialize)]
+        pub(crate) struct Inputs {
+          ${inputFields}
+        }
 
-  const types = `
-pub mod ${name} {
-  #[allow(unused_imports)]
-  pub(crate) use super::*;
-  #[derive(serde::Deserialize)]
-  pub(crate) struct Inputs {
-    ${inputFields}
+        pub(crate) type Outputs = ${convertType(op.type, config)};
+      }  `;
   }
 
-  pub(crate) type Outputs = ${convertType(op.type, config)};
-}  `;
   return [traitFn, wrapper, types];
 }
