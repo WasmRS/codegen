@@ -1,4 +1,4 @@
-import { AnyType, ObjectMap } from "../../deps/core/model.ts";
+import { AnyType, Kind, ObjectMap, Stream } from "../../deps/core/model.ts";
 import { utils } from "../../deps/codegen/rust.ts";
 
 /**
@@ -16,5 +16,10 @@ export function convertType(
   asRef = false,
   lifetime = "",
 ): string {
-  return utils.types.apexToRustType(typ, config, asRef, lifetime);
+  if (typ.kind === Kind.Stream) {
+    const t = typ as Stream;
+    return utils.types.apexToRustType(t.type, config, asRef, lifetime);
+  } else {
+    return utils.types.apexToRustType(typ, config, asRef, lifetime);
+  }
 }
