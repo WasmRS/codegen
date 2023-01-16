@@ -4,9 +4,7 @@ import * as apex from "../deps/core/mod.ts";
 const importUrl = new URL(".", import.meta.url);
 
 function urlify(relpath: string): string {
-  const url = new URL(relpath, importUrl).toString();
-  console.error(url);
-  return url;
+  return new URL(relpath, importUrl).toString();
 }
 
 interface Alias {
@@ -89,7 +87,7 @@ export default function (
     module: mod,
     visitorClass: `ScaffoldVisitor`,
     config: {
-      types: ["service"],
+      types: ["service", "events", "actors"],
     },
   };
 

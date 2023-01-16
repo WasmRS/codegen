@@ -35,6 +35,13 @@ export class ImportsVisitor extends GoImportsVisitor {
     super.checkType(context, type);
   }
 
+  public visitEnum(_context: Context): void {
+    this.addType("ERRORS", {
+      type: "ERRORS",
+      import: "errors",
+    });
+  }
+
   visitFunction(context: Context): void {
     this.checkReturn(context.operation);
     super.visitFunction(context);
