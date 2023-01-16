@@ -10,12 +10,24 @@ function urlify(relpath: string): string {
 }
 
 interface Alias {
-  type: string,
-  import?: string,
-  format?: string,
-  parse?: string,
+  type: string;
+  import?: string;
+  format?: string;
+  parse?: string;
 }
-type Aliases = Record<string, Alias>
+type Aliases = Record<string, Alias>;
+
+interface TasksConfig {
+  tasks: Record<string, string[]>;
+}
+
+function taskName(taskExpr: string): string {
+  const idx = taskExpr.indexOf(">");
+  if (idx != -1) {
+    return taskExpr.substring(idx).trim();
+  }
+  return taskExpr.trim();
+}
 
 export default function (
   _doc: apex.ast.Document,
@@ -32,7 +44,7 @@ export default function (
       import: "github.com/nanobus/iota/go/types/uuid",
       format: "String",
       parse: "uuid.Parse",
-    }
+    };
   }
 
   const { module, package: pkg } = config.config;
@@ -80,6 +92,30 @@ export default function (
       types: ["service"],
     },
   };
+
+  const tasks = (config as unknown as TasksConfig).tasks ||= {};
+  const names = new Set<string>(Object.keys(tasks).map((k) => taskName(k)));
+  const defaultTasks: Record<string, string[]> = {
+    "all > clean generate deps build": [],
+    clean: [
+      "rm -Rf build",
+    ],
+    deps: [
+      "go mod tidy",
+    ],
+    build: [
+      "mkdir -p build",
+      `tinygo build -o build/${config.config.name}.wasm --scheduler=none --target=wasi -no-debug cmd/main.go`,
+    ],
+    test: [
+      "go test --count=1 ./pkg/...",
+    ],
+  };
+  for (const key of Object.keys(defaultTasks)) {
+    if (!names.has(taskName(key))) {
+      tasks[key] = defaultTasks[key];
+    }
+  }
 
   return config;
 }
