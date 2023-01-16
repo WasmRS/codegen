@@ -9,12 +9,31 @@ function urlify(relpath: string): string {
   return url;
 }
 
+interface Alias {
+  type: string,
+  import?: string,
+  format?: string,
+  parse?: string,
+}
+type Aliases = Record<string, Alias>
+
 export default function (
   _doc: apex.ast.Document,
   config: Configuration,
 ): Configuration {
   config.config ||= {};
+  config.config.aliases ||= {};
   config.generates ||= {};
+
+  const aliases = config.config.aliases as Aliases;
+  if (!aliases.UUID) {
+    aliases["UUID"] = {
+      type: "uuid.UUID",
+      import: "github.com/nanobus/iota/go/types/uuid",
+      format: "String",
+      parse: "uuid.Parse",
+    }
+  }
 
   const { module, package: pkg } = config.config;
 
