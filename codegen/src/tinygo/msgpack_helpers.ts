@@ -31,6 +31,7 @@ import {
 import {
   expandType,
   fieldName,
+  getImporter,
   Import,
   returnShare,
   translateAlias,
@@ -44,6 +45,7 @@ import {
   msgpackEncodeFuncs,
   msgpackEncodeNillableFuncs,
 } from "./msgpack_constants.ts";
+import { IMPORTS } from "./constants.ts";
 
 /**
  * Creates string that is an msgpack read code block
@@ -61,6 +63,7 @@ export function msgpackRead(
   t: AnyType,
   prevOptional: boolean,
 ): string {
+  const $ = getImporter(context, IMPORTS);
   const tr = translateAlias(context);
   const returnPrefix = defaultVal == "" ? "" : `${defaultVal}, `;
   let prefix = "return ";
@@ -108,10 +111,10 @@ export function msgpackRead(
       if (imp && imp.parse) {
         if (prevOptional) {
           const decoder = msgpackDecodeNillableFuncs.get(prim.name)!;
-          return `${prefix}convert.NillableParse(${imp.parse})(decoder.${decoder}())\n`;
+          return `${prefix}${$.convert}.NillableParse(${imp.parse})(decoder.${decoder}())\n`;
         } else {
           const decoder = msgpackDecodeFuncs.get(prim.name)!;
-          return `${prefix}convert.Parse(${imp.parse})(decoder.${decoder}())\n`;
+          return `${prefix}${$.convert}.Parse(${imp.parse})(decoder.${decoder}())\n`;
         }
       }
       if (prevOptional) {
@@ -132,9 +135,9 @@ export function msgpackRead(
     case Kind.Primitive: {
       const namedNode = t as Named;
       const amp = typeInstRef ? "&" : "";
-      let decodeFn = `msgpack.Decode[${namedNode.name}](${amp}decoder)`;
+      let decodeFn = `${$.msgpack}.Decode[${namedNode.name}](${amp}decoder)`;
       if (prevOptional) {
-        decodeFn = `msgpack.DecodeNillable[${namedNode.name}](decoder)`;
+        decodeFn = `${$.msgpack}.DecodeNillable[${namedNode.name}](decoder)`;
       }
       if (prevOptional && msgpackDecodeNillableFuncs.has(namedNode.name)) {
         decodeFn = `decoder.${
@@ -149,10 +152,10 @@ export function msgpackRead(
     }
     case Kind.Enum: {
       const e = t as Enum;
-      let decodeFn = `convert.Numeric[${e.name}](decoder.ReadInt32())`;
+      let decodeFn = `${$.convert}.Numeric[${e.name}](decoder.ReadInt32())`;
       if (prevOptional) {
         decodeFn =
-          `convert.NillableNumeric[${e.name}](decoder.ReadNillableInt32())`;
+          `${$.convert}.NillableNumeric[${e.name}](decoder.ReadNillableInt32())`;
       }
       return `${prefix}${decodeFn}\n`;
     }
@@ -280,9 +283,8 @@ export function msgpackRead(
       );
       return optCode;
     }
-    default: {
+    default:
       return "unknown\n";
-    }
   }
 }
 
@@ -416,7 +418,6 @@ export function msgpackWrite(
     case Kind.Optional: {
       const optionalNode = t as Optional;
       switch (optionalNode.type.kind) {
-        // deno-lint-ignore no-fallthrough
         case Kind.Alias: {
           const a = optionalNode.type as Alias;
           const aliases =
@@ -425,8 +426,8 @@ export function msgpackWrite(
           if (imp && imp.format) {
             break;
           }
-          // falls through */
         }
+        /* falls through */
         case Kind.List:
         case Kind.Map:
         case Kind.Enum:
@@ -460,9 +461,8 @@ export function msgpackWrite(
       code += "}\n";
       return code;
     }
-    default: {
+    default:
       return "unknown\n";
-    }
   }
 }
 

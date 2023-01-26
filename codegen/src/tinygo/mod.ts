@@ -17,7 +17,6 @@ limitations under the License.
 export * from "./constants.ts";
 export * from "./export_visitor.ts";
 export * from "./import_visitor.ts";
-export * from "./imports_visitor.ts";
 export * from "./interface_visitor.ts";
 export * from "./interfaces_visitor.ts";
 export * from "./main_visitor.ts";

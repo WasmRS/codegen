@@ -14,15 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseVisitor, Context } from "../deps/core/model.ts";
-import { fieldName } from "../deps/codegen/go.ts";
+import { Context } from "../deps/core/model.ts";
+import { fieldName, getImporter, GoVisitor } from "../deps/codegen/go.ts";
 import { msgpackEncode } from "./msgpack_helpers.ts";
+import { IMPORTS } from "./constants.ts";
 
-export class MsgPackEncoderVisitor extends BaseVisitor {
+export class MsgPackEncoderVisitor extends GoVisitor {
   visitTypeFieldsBefore(context: Context): void {
     super.triggerTypeFieldsBefore(context);
+    const $ = getImporter(context, IMPORTS);
+
     this.write(
-      `func (o *${context.type.name}) Encode(encoder msgpack.Writer) error {
+      `func (o *${context.type.name}) Encode(encoder ${$.msgpack}.Writer) error {
     if o == nil {
       encoder.WriteNil()
       return nil
@@ -53,11 +56,12 @@ export class MsgPackEncoderVisitor extends BaseVisitor {
   }
 }
 
-export class MsgPackEncoderUnionVisitor extends BaseVisitor {
+export class MsgPackEncoderUnionVisitor extends GoVisitor {
   visitTypeFieldsBefore(context: Context): void {
     super.triggerTypeFieldsBefore(context);
+    const $ = getImporter(context, IMPORTS);
     this.write(
-      `func (o *${context.type.name}) Encode(encoder msgpack.Writer) error {
+      `func (o *${context.type.name}) Encode(encoder ${$.msgpack}.Writer) error {
     if o == nil {
       encoder.WriteNil()
       return nil

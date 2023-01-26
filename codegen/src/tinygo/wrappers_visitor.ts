@@ -16,7 +16,6 @@ limitations under the License.
 
 import {
   Alias,
-  BaseVisitor,
   Context,
   Enum,
   Kind,
@@ -26,6 +25,8 @@ import {
 } from "../deps/core/model.ts";
 import {
   expandType,
+  getImporter,
+  GoVisitor,
   methodName,
   msgpackRead,
   msgpackVarAccessParam,
@@ -43,9 +44,9 @@ import {
   operationArgsType,
   uncapitalize,
 } from "../deps/codegen/utils.ts";
-import { primitiveTransformers } from "./constants.ts";
+import { IMPORTS, primitiveTransformers } from "./constants.ts";
 
-export class WrappersVisitor extends BaseVisitor {
+export class WrappersVisitor extends GoVisitor {
   visitContextBefore(_context: Context): void {
     setExpandStreamPattern("flux.Flux[{{type}}]");
   }
@@ -67,6 +68,7 @@ export class WrappersVisitor extends BaseVisitor {
 
   doRegister(context: Context): void {
     const { namespace: ns, operation } = context;
+    const $ = getImporter(context, IMPORTS);
     const handlerName = `${capitalize(operation.name)}Fn`;
     const wrapperName = `${uncapitalize(operation.name)}Wrapper`;
     let rxStyle = "RequestResponse";
@@ -86,7 +88,7 @@ export class WrappersVisitor extends BaseVisitor {
 
     this.write(
       `func Register${capitalize(operation.name)}(handler ${handlerName}) {
-      invoke.Export${rxStyle}("${ns.name}", "${operation.name}", ${wrapperName}(handler))
+        ${$.invoke}.Export${rxStyle}("${ns.name}", "${operation.name}", ${wrapperName}(handler))
     }\n\n`,
     );
   }
@@ -94,15 +96,16 @@ export class WrappersVisitor extends BaseVisitor {
   doHandler(context: Context): void {
     const tr = translateAlias(context);
     const { interface: iface, operation } = context;
+    const $ = getImporter(context, IMPORTS);
     const handlerName = `${capitalize(operation.name)}Fn`;
     const wrapperName = iface
       ? `${uncapitalize(iface.name)}${capitalize(operation.name)}Wrapper`
       : `${uncapitalize(operation.name)}Wrapper`;
     let rxStyle = "RequestResponse";
     let rxWrapper = "mono.Mono";
-    let rxArgs = `p payload.Payload`;
+    let rxArgs = `p ${$.payload}.Payload`;
     let rxHandlerIn = ``;
-    const rxPackage = operation.type.kind == Kind.Stream ? "flux" : "mono";
+    const rxPackage = operation.type.kind == Kind.Stream ? `${$.flux}` : `${$.mono}`;
     const streams = operation.parameters
       .filter((p) => p.type.kind == Kind.Stream)
       .map((p) => (p.type as Stream).type);
@@ -118,14 +121,14 @@ export class WrappersVisitor extends BaseVisitor {
     }
     if (streamIn || operation.type.kind == Kind.Stream) {
       rxStyle = streamIn ? "RequestChannel" : "RequestStream";
-      rxWrapper = "flux.Flux";
+      rxWrapper = `${$.flux}.Flux`;
     }
     if (streamIn) {
-      rxArgs += `, in flux.Flux[payload.Payload]`;
+      rxArgs += `, in ${$.flux}.Flux[${$.payload}.Payload]`;
       switch (streamIn.kind) {
         case Kind.Primitive: {
           const prim = streamIn as Primitive;
-          rxHandlerIn = `, flux.Map(in, ${
+          rxHandlerIn = `, ${$.flux}.Map(in, ${
             primitiveTransformers.get(
               prim.name,
             )
@@ -134,14 +137,14 @@ export class WrappersVisitor extends BaseVisitor {
         }
         case Kind.Enum: {
           const e = streamIn as Enum;
-          rxHandlerIn = `, flux.Map(in, transform.Int32Decode[${e.name}])`;
+          rxHandlerIn = `, ${$.flux}.Map(in, ${$.transform}.Int32Decode[${e.name}])`;
           break;
         }
         case Kind.Alias: {
           const a = streamIn as Alias;
           if (a.type.kind == Kind.Primitive) {
             const p = a.type as Primitive;
-            rxHandlerIn = `, flux.Map(in, transform.${
+            rxHandlerIn = `, ${$.flux}.Map(in, ${$.transform}.${
               capitalize(
                 p.name,
               )
@@ -149,15 +152,15 @@ export class WrappersVisitor extends BaseVisitor {
           } else {
             const expanded = expandType(a.type, undefined, undefined, tr);
             rxHandlerIn =
-              `, flux.Map(in, func(raw payload.Payload) (val ${a.name}, err error) {
-              err = transform.CodecDecode(raw, (*${expanded})(&val))
+              `, ${$.flux}.Map(in, func(raw ${$.payload}.Payload) (val ${a.name}, err error) {
+              err = ${$.transform}.CodecDecode(raw, (*${expanded})(&val))
               return val, err
             })`;
           }
           break;
         }
         default:
-          rxHandlerIn = `, flux.Map(in, transform.MsgPackDecode[${
+          rxHandlerIn = `, ${$.flux}.Map(in, ${$.transform}.MsgPackDecode[${
             expandType(
               streamIn,
               undefined,
@@ -172,14 +175,14 @@ export class WrappersVisitor extends BaseVisitor {
     let handlerMethodName = "handler";
     if (iface) {
       this.write(
-        `func ${wrapperName}(svc ${iface.name}) invoke.${rxStyle}Handler {
-          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`,
+        `func ${wrapperName}(svc ${iface.name}) ${$.invoke}.${rxStyle}Handler {
+          return func(ctx ${$.context}.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`,
       );
       handlerMethodName = `svc.${methodName(operation, operation.name)}`;
     } else {
       this.write(
-        `func ${wrapperName}(handler ${handlerName}) invoke.${rxStyle}Handler {
-          return func(ctx context.Context, ${rxArgs}) ${rxWrapper}[payload.Payload] {\n`,
+        `func ${wrapperName}(handler ${handlerName}) ${$.invoke}.${rxStyle}Handler {
+          return func(ctx ${$.context}.Context, ${rxArgs}) ${rxWrapper}[${$.payload}.Payload] {\n`,
       );
     }
     if (operation.isUnary() && parameters.length > 0) {
@@ -191,9 +194,9 @@ export class WrappersVisitor extends BaseVisitor {
           false,
           tr,
         );
-        this.write(`enumVal, err := transform.Int32.Decode(p)
+        this.write(`enumVal, err := ${$.transform}.Int32.Decode(p)
         if err != nil {
-          return ${rxPackage}.Error[payload.Payload](err)
+          return ${rxPackage}.Error[${$.payload}.Payload](err)
         }
         request := ${unaryParamExpanded}(enumVal)\n`);
       } else if (unaryParam.type.kind == Kind.Alias) {
@@ -205,13 +208,13 @@ export class WrappersVisitor extends BaseVisitor {
           false,
           tr,
         );
-        this.write(`aliasVal, err := transform.${
+        this.write(`aliasVal, err := ${$.transform}.${
           capitalize(
             primitiveExpanded,
           )
         }.Decode(p)
           if err != nil {
-            return ${rxPackage}.Error[payload.Payload](err)
+            return ${rxPackage}.Error[${$.payload}.Payload](err)
           }
           request := ${unaryParamExpanded}(aliasVal)\n`);
       } else if (isObject(unaryParam.type)) {
@@ -223,12 +226,12 @@ export class WrappersVisitor extends BaseVisitor {
             tr,
           )
         }
-        if err := transform.CodecDecode(p, &request); err != nil {
-          return ${rxPackage}.Error[payload.Payload](err)
+        if err := ${$.transform}.CodecDecode(p, &request); err != nil {
+          return ${rxPackage}.Error[${$.payload}.Payload](err)
         }\n`);
       } else {
         this.write(
-          `decoder := msgpack.NewDecoder(p.Data())
+          `decoder := ${$.msgpack}.NewDecoder(p.Data())
           ${
             msgpackRead(
               context,
@@ -242,7 +245,7 @@ export class WrappersVisitor extends BaseVisitor {
           }`,
         );
         this.write(`if err != nil {
-          return ${rxPackage}.Error[payload.Payload](err)
+          return ${rxPackage}.Error[${$.payload}.Payload](err)
         }\n`);
       }
       this.write(
@@ -256,8 +259,8 @@ export class WrappersVisitor extends BaseVisitor {
       if (parameters.length > 0) {
         const argsName = operationArgsType(iface, operation);
         this.write(`var inputArgs ${argsName}
-        if err := transform.CodecDecode(p, &inputArgs); err != nil {
-          return ${rxPackage}.Error[payload.Payload](err)
+        if err := ${$.transform}.CodecDecode(p, &inputArgs); err != nil {
+          return ${rxPackage}.Error[${$.payload}.Payload](err)
         }\n`);
       }
       this.write(
@@ -275,7 +278,7 @@ export class WrappersVisitor extends BaseVisitor {
     }
     if (isVoid(returnType)) {
       this.visitWrapperBeforeReturn(context);
-      this.write(`return mono.Map(response, transform.Void.Encode)\n`);
+      this.write(`return ${$.mono}.Map(response, ${$.transform}.Void.Encode)\n`);
     } else if (returnType.kind == Kind.Primitive) {
       const prim = returnType as Primitive;
       this.write(
@@ -287,32 +290,32 @@ export class WrappersVisitor extends BaseVisitor {
       );
     } else if (returnType.kind == Kind.Alias) {
       const a = returnType as Alias;
-      let transformFn = `transform.${capitalize(a.name)}.Encode`;
+      let transformFn = `${$.transform}.${capitalize(a.name)}.Encode`;
       if (a.type.kind == Kind.Primitive) {
         const p = a.type as Primitive;
-        transformFn = `transform.${capitalize(p.name)}Encode[${a.name}]`;
+        transformFn = `${$.transform}.${capitalize(p.name)}Encode[${a.name}]`;
       } else {
         const expanded = expandType(a.type, undefined, undefined, tr);
-        transformFn = `func(value ${a.name}) (payload.Payload, error) {
-            return transform.CodecEncode((*${expanded})(&value))
+        transformFn = `func(value ${a.name}) (${$.payload}.Payload, error) {
+            return ${$.transform}.CodecEncode((*${expanded})(&value))
           }`;
       }
       this.write(`return ${rxPackage}.Map(response, ${transformFn})`);
     } else if (returnType.kind == Kind.Enum) {
       const e = returnType as Enum;
       this.write(
-        `return ${rxPackage}.Map(response, transform.Int32Encode[${e.name}])`,
+        `return ${rxPackage}.Map(response, ${$.transform}.Int32Encode[${e.name}])`,
       );
     } else if (returnType.kind == Kind.List) {
       const l = returnType as List;
       const expanded = expandType(l.type, undefined, undefined, tr);
       this.write(
-        `return mono.Map(response, transform.SliceEncode[${expanded}])`,
+        `return ${$.mono}.Map(response, ${$.transform}.SliceEncode[${expanded}])`,
       );
     } else if (isObject(returnType)) {
       this.visitWrapperBeforeReturn(context);
       this.write(
-        `return ${rxPackage}.Map(response, transform.MsgPackEncode[${
+        `return ${rxPackage}.Map(response, ${$.transform}.MsgPackEncode[${
           expandType(
             operation.type,
             undefined,

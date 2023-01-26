@@ -1,5 +1,5 @@
 import { noCase } from "../../deps/codegen/utils.ts";
-import { Kind, Operation } from "../deps/apex_model.ts";
+import { Kind, Operation } from "../../deps/core/model.ts";
 export * as types from "./types.ts";
 export * as convert from "./conversions.ts";
 

@@ -55,6 +55,11 @@ function getLogger(context: Context): Logger | undefined {
 }
 
 export class ScaffoldVisitor extends BaseVisitor {
+  writeHead(context: Context): void {
+    context.config.doNotEdit = false;
+    super.writeHead(context);
+  }
+
   visitNamespaceBefore(context: Context): void {
     const packageName = context.config.package || "myapp";
     super.visitNamespaceBefore(context);

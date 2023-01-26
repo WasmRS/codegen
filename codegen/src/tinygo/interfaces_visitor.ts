@@ -16,14 +16,11 @@ limitations under the License.
 
 import { Context, Visitor, Writer } from "../deps/core/model.ts";
 import { InterfacesVisitor as GoInterfacesVisitor } from "../deps/codegen/go.ts";
-import { ImportsVisitor } from "./imports_visitor.ts";
 import { InterfaceVisitor } from "./interface_visitor.ts";
 
 export class InterfacesVisitor extends GoInterfacesVisitor {
   constructor(writer: Writer) {
     super(writer);
-    this.importsVisitor = (writer: Writer): Visitor =>
-      new ImportsVisitor(writer);
     this.serviceVisitor = (writer: Writer): Visitor =>
       new InterfaceVisitor(writer);
     this.dependencyVisitor = (writer: Writer): Visitor =>

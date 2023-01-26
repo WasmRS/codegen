@@ -30,3 +30,17 @@ export const primitiveTransformers = new Map<string, string>([
   ["f64", "transform.Float64"],
   ["bytes", "transform.Bytes"],
 ]);
+
+export const IMPORTS = {
+  context: "context",
+  binary: "encoding/binary",
+  guest: "github.com/nanobus/iota/go/transport/wasmrs/guest",
+  invoke: "github.com/nanobus/iota/go/invoke",
+  msgpack: "github.com/nanobus/iota/go/msgpack",
+  convert: "github.com/nanobus/iota/go/msgpack/convert",
+  transform: "github.com/nanobus/iota/go/transform",
+  payload: "github.com/nanobus/iota/go/payload",
+  proxy: "github.com/nanobus/iota/go/proxy",
+  mono: "github.com/nanobus/iota/go/rx/mono",
+  flux: "github.com/nanobus/iota/go/rx/flux",
+};

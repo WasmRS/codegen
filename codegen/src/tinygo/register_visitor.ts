@@ -14,16 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseVisitor, Context, Kind, Stream } from "../deps/core/model.ts";
-import { setExpandStreamPattern } from "../deps/codegen/go.ts";
+import { Context, Kind, Stream } from "../deps/core/model.ts";
+import { getImporter, GoVisitor, setExpandStreamPattern } from "../deps/codegen/go.ts";
 import {
   capitalize,
   isHandler,
   noCode,
   uncapitalize,
 } from "../deps/codegen/utils.ts";
+import { IMPORTS } from "./constants.ts";
 
-export class RegisterVisitor extends BaseVisitor {
+export class RegisterVisitor extends GoVisitor {
   visitContextBefore(_context: Context): void {
     setExpandStreamPattern("flux.Flux[{{type}}]");
   }
@@ -44,6 +45,7 @@ export class RegisterVisitor extends BaseVisitor {
     }
 
     const { namespace: ns, interface: iface, operation } = context;
+    const $ = getImporter(context, IMPORTS);
     const wrapperName = `${uncapitalize(iface.name)}${
       capitalize(
         operation.name,
@@ -59,7 +61,7 @@ export class RegisterVisitor extends BaseVisitor {
     }
 
     this.write(
-      `invoke.Export${rxStyle}("${ns.name}.${iface.name}", "${operation.name}", ${wrapperName}(svc))\n`,
+      `${$.invoke}.Export${rxStyle}("${ns.name}.${iface.name}", "${operation.name}", ${wrapperName}(svc))\n`,
     );
   }
 

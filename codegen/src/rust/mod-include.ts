@@ -1,4 +1,4 @@
-import * as model from "./deps/apex_model.ts";
+import * as model from "../deps/core/model.ts";
 
 type Context = model.Context;
 

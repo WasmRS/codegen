@@ -5,8 +5,8 @@ import {
   ObjectMap,
   Operation,
   Stream,
-} from "../deps/apex_model.ts";
-import { rust } from "../deps/apex_codegen.ts";
+} from "../../deps/core/model.ts";
+import { rust } from "../../deps/codegen/mod.ts";
 import { convertDescription } from "../utils/conversions.ts";
 import { Actions, constantCase, determineVariant } from "../utils/mod.ts";
 import { convertType } from "../utils/types.ts";

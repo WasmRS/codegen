@@ -1,5 +1,5 @@
-import * as model from "./deps/apex_model.ts";
-import * as codegen from "./deps/apex_codegen.ts";
+import * as model from "../deps/core/model.ts";
+import * as codegen from "../deps/codegen/mod.ts";
 import { ServiceVisitor } from "./visitors/service-visitor.ts";
 import { ProviderVisitor } from "./visitors/provider-visitor.ts";
 import { ActionKind, Actions, constantCase } from "./utils/mod.ts";

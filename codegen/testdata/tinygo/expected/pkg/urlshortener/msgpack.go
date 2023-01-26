@@ -4,10 +4,7 @@ package urlshortener
 
 import (
 	"github.com/nanobus/iota/go/msgpack"
-	"github.com/nanobus/iota/go/msgpack/convert"
 )
-
-var _ = convert.Package
 
 type ShortenerShortenArgs struct {
 	URL string `json:"url" yaml:"url" msgpack:"url"`

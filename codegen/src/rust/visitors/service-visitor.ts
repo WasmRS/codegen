@@ -4,8 +4,8 @@ import {
   ObjectMap,
   Operation,
   Parameter,
-} from "../deps/apex_model.ts";
-import { rust } from "../deps/apex_codegen.ts";
+} from "../../deps/core/model.ts";
+import { rust } from "../../deps/codegen/mod.ts";
 import { convertDescription } from "../utils/conversions.ts";
 import { convertType } from "../utils/types.ts";
 

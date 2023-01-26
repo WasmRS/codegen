@@ -14,16 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import { BaseVisitor, Context } from "../deps/core/model.ts";
-import { fieldName } from "../deps/codegen/go.ts";
+import { Context } from "../deps/core/model.ts";
+import { fieldName, getImporter, GoVisitor } from "../deps/codegen/go.ts";
 import { msgpackRead } from "./msgpack_helpers.ts";
+import { IMPORTS } from "./constants.ts";
 
-export class MsgPackDecoderVisitor extends BaseVisitor {
+export class MsgPackDecoderVisitor extends GoVisitor {
   visitTypeFieldsBefore(context: Context): void {
     super.triggerTypeFieldsBefore(context);
+    const $ = getImporter(context, IMPORTS);
+
     const type = context.type;
     this.write(
-      `func (o *${type.name}) Decode(decoder msgpack.Reader) error {
+      `func (o *${type.name}) Decode(decoder ${$.msgpack}.Reader) error {
     numFields, err := decoder.ReadMapSize()
     if err != nil {
       return err

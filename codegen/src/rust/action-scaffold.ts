@@ -1,4 +1,4 @@
-import * as model from "./deps/apex_model.ts";
+import * as model from "../deps/core/model.ts";
 import { ActionKind } from "./utils/mod.ts";
 
 type Context = model.Context;

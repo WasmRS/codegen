@@ -16,7 +16,6 @@ limitations under the License.
 
 import {
   Alias,
-  BaseVisitor,
   Context,
   Enum,
   Kind,
@@ -28,6 +27,8 @@ import {
 import {
   expandType,
   fieldName,
+  getImporter,
+  GoVisitor,
   mapParam,
   methodName,
   parameterName,
@@ -41,9 +42,9 @@ import {
   operationArgsType,
 } from "../deps/codegen/utils.ts";
 import { getOperationParts } from "./utilities.ts";
-import { primitiveTransformers } from "./constants.ts";
+import { IMPORTS, primitiveTransformers } from "./constants.ts";
 
-export class InvokersVisitor extends BaseVisitor {
+export class InvokersVisitor extends GoVisitor {
   visitOperation(context: Context): void {
     this.doHandler(context);
   }
@@ -60,24 +61,28 @@ export class InvokersVisitor extends BaseVisitor {
 
   visitOperationReturn(context: Context): void {
     const { operation } = context;
+    const $ = getImporter(context, IMPORTS);
     const translate = translateAlias(context);
-    let rxWrapper = `mono.Mono`;
+    let rxWrapper;
     if (!isVoid(operation.type)) {
       let t = operation.type;
       if (t.kind == Kind.Stream) {
         const s = t as Stream;
         t = s.type;
-        rxWrapper = `flux.Flux`;
+        rxWrapper = `${$.flux}.Flux`;
+      } else {
+        rxWrapper = `${$.mono}.Mono`;
       }
       this.write(` ${rxWrapper}[${expandType(t, undefined, true, translate)}]`);
     } else {
-      this.write(` mono.Void`);
+      this.write(` ${$.mono}.Void`);
     }
   }
 
   doHandler(context: Context): void {
     const tr = translateAlias(context);
     const { interface: iface, operation } = context;
+    const $ = getImporter(context, IMPORTS);
 
     let receiver = "";
     if (iface) {
@@ -89,11 +94,11 @@ export class InvokersVisitor extends BaseVisitor {
             operation,
             operation.name,
           )
-        }(ctx context.Context`,
+        }(ctx ${$.context}.Context`,
       );
     } else {
       this.write(
-        `func ${methodName(operation, operation.name)}(ctx context.Context`,
+        `func ${methodName(operation, operation.name)}(ctx ${$.context}.Context`,
       );
     }
 
@@ -114,7 +119,7 @@ export class InvokersVisitor extends BaseVisitor {
     if (unaryIn) {
       if (unaryIn.type.kind == Kind.Enum) {
         this
-          .write(`payloadData, err := msgpack.I32ToBytes(int32(${
+          .write(`payloadData, err := ${$.msgpack}.I32ToBytes(int32(${
             parameterName(
               unaryIn,
               unaryIn.name,
@@ -140,7 +145,7 @@ export class InvokersVisitor extends BaseVisitor {
         //   }
         //   request := ${unaryParamExpanded}(aliasVal)\n`);
       } else if (isObject(unaryIn.type)) {
-        this.write(`payloadData, err := msgpack.ToBytes(${
+        this.write(`payloadData, err := ${$.msgpack}.ToBytes(${
           parameterName(
             unaryIn,
             unaryIn.name,
@@ -151,7 +156,7 @@ export class InvokersVisitor extends BaseVisitor {
         }\n`);
       } else if (isPrimitive(unaryIn.type)) {
         const p = unaryIn.type as Primitive;
-        this.write(`payloadData, err := msgpack.${
+        this.write(`payloadData, err := ${$.msgpack}.${
           capitalize(
             p.name,
           )
@@ -170,7 +175,7 @@ export class InvokersVisitor extends BaseVisitor {
           );
         });
         this.write(`}
-        payloadData, err := msgpack.ToBytes(&request)
+        payloadData, err := ${$.msgpack}.ToBytes(&request)
         if err != nil {
           return ${returnPackage}.Error[${returnType}](err)
         }\n`);
@@ -183,62 +188,62 @@ export class InvokersVisitor extends BaseVisitor {
       : `_op${methodName(operation, operation.name)}`;
     this.write(
       `var metadata [8]byte
-      stream, ok := proxy.FromContext(ctx)
-      binary.BigEndian.PutUint32(metadata[0:4], ${opVar})
+      stream, ok := ${$.proxy}.FromContext(ctx)
+      ${$.binary}.BigEndian.PutUint32(metadata[0:4], ${opVar})
       if ok {
-        binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+        ${$.binary}.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
       }
-      pl := payload.New(payloadData, metadata[:])\n`,
+      pl := ${$.payload}.New(payloadData, metadata[:])\n`,
     );
     if (streamIn) {
       let transformFn = "";
       switch (streamIn.type.kind) {
         case Kind.Primitive: {
           const p = streamIn.type as Primitive;
-          transformFn = `transform.${capitalize(p.name)}.Encode`;
+          transformFn = `${$.transform}.${capitalize(p.name)}.Encode`;
           break;
         }
         case Kind.Alias: {
           const a = streamIn.type as Alias;
           if (a.type.kind == Kind.Primitive) {
             const p = a.type as Primitive;
-            transformFn = `transform.${capitalize(p.name)}Encode[${a.name}]`;
+            transformFn = `${$.transform}.${capitalize(p.name)}Encode[${a.name}]`;
           } else {
             const expanded = expandType(a.type, undefined, undefined, tr);
             transformFn = `func(value ${a.name}) (payload.Payload, error) {
-                return transform.CodecEncode((*${expanded})(&value))
+                return ${$.transform}.CodecEncode((*${expanded})(&value))
               }`;
           }
           break;
         }
         case Kind.Enum: {
           const e = streamIn.type as Enum;
-          transformFn = `transform.Int32Encode[${e.name}]`;
+          transformFn = `${$.transform}.Int32Encode[${e.name}]`;
           break;
         }
         case Kind.Type:
         case Kind.Union: {
           const t = streamIn.type as Named;
-          transformFn = `transform.MsgPackEncode[${t.name}]`;
+          transformFn = `${$.transform}.MsgPackEncode[${t.name}]`;
           break;
         }
         default: {
           console.log(streamIn.type.kind);
         }
       }
-      const inMap = `flux.Map(${streamIn.parameter.name}, ${transformFn})`;
+      const inMap = `${$.flux}.Map(${streamIn.parameter.name}, ${transformFn})`;
       this.write(`future := gCaller.${type}(ctx, pl, ${inMap})\n`);
     } else {
       this.write(`future := gCaller.${type}(ctx, pl)\n`);
     }
     if (!returns || isVoid(returns)) {
-      this.write(`return mono.Map(future, transform.Void.Decode)\n`);
+      this.write(`return ${$.mono}.Map(future, ${$.transform}.Void.Decode)\n`);
     } else if (returns.kind == Kind.Alias) {
       const a = returns as Alias;
       if (a.type.kind == Kind.Primitive) {
         const p = a.type as Primitive;
         this.write(
-          `return ${returnPackage}.Map(future, transform.${
+          `return ${returnPackage}.Map(future, ${$.transform}.${
             capitalize(
               p.name,
             )
@@ -248,7 +253,7 @@ export class InvokersVisitor extends BaseVisitor {
         const expanded = expandType(a.type, undefined, undefined, tr);
         this.write(
           `return ${returnPackage}.Map(future, func(raw payload.Payload) (val ${a.name}, err error) {
-            err = transform.CodecDecode(raw, (*${expanded})(&val))
+            err = ${$.transform}.CodecDecode(raw, (*${expanded})(&val))
             return val, err
           })\n`,
         );
@@ -256,7 +261,7 @@ export class InvokersVisitor extends BaseVisitor {
     } else if (returns.kind == Kind.Enum) {
       const e = returns as Enum;
       this.write(
-        `return ${returnPackage}.Map(future, transform.Int32Decode[${e.name}])\n`,
+        `return ${returnPackage}.Map(future, ${$.transform}.Int32Decode[${e.name}])\n`,
       );
     } else if (isPrimitive(returns)) {
       const p = returns as Primitive;
@@ -266,11 +271,11 @@ export class InvokersVisitor extends BaseVisitor {
       const l = returns as List;
       const expanded = expandType(l.type, undefined, undefined, tr);
       this.write(
-        `return ${returnPackage}.Map(future, transform.SliceDecode[${expanded}])\n`,
+        `return ${returnPackage}.Map(future, ${$.transform}.SliceDecode[${expanded}])\n`,
       );
     } else {
       this.write(
-        `return ${returnPackage}.Map(future, transform.MsgPackDecode[${returnType}])\n`,
+        `return ${returnPackage}.Map(future, ${$.transform}.MsgPackDecode[${returnType}])\n`,
       );
     }
     this.write(`}\n\n`);

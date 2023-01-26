@@ -1,9 +1,12 @@
-import { Configuration } from "https://deno.land/x/apex_cli@v0.0.6/src/config.ts";
-import * as apex from "./deps/apex_core.ts";
-import * as codegen from "./deps/apex_codegen.ts";
-import { Context, Operation } from "./deps/apex_model.ts";
+import {
+  Configuration,
+  TaskDefinition,
+} from "https://deno.land/x/apex_cli@v0.0.15/src/config.ts";
+import * as apex from "../deps/core/mod.ts";
+import * as rust from "../deps/codegen/rust.ts";
+import { Context, Operation } from "../deps/core/model.ts";
 import { determineVariant } from "./utils/mod.ts";
-const utils = codegen.rust.utils;
+const utils = rust.utils;
 
 const importUrl = new URL(".", import.meta.url);
 
@@ -12,13 +15,25 @@ function urlify(relpath: string): string {
   return url;
 }
 
+function taskName(taskExpr: string): string {
+  const idx = taskExpr.indexOf(">");
+  if (idx != -1) {
+    return taskExpr.substring(idx).trim();
+  }
+  return taskExpr.trim();
+}
+
 export default function (
   doc: apex.ast.Document,
   config: Configuration,
 ): Configuration {
-  config.generates ||= {};
-
+  config.config ||= {};
+  const generates = config.generates ||= {};
   const context = new Context({}, doc);
+
+  const { module } = config.config;
+  config.config.name ||= module;
+  const wasmName = `${(config.config.name as string).replace("-", "_")}.wasm`;
 
   const interfaces = doc.definitions.filter(
     (def) => def.getKind() === apex.ast.Kind.InterfaceDefinition,
@@ -33,7 +48,7 @@ export default function (
       iface.operations.forEach((op) => {
         const rusty_action = utils.rustify(op.name.value);
         modules[rusty_iface].push(rusty_action);
-        config.generates[`./src/actions/${rusty_iface}/${rusty_action}.rs`] = {
+        generates[`./src/actions/${rusty_iface}/${rusty_action}.rs`] = {
           module: urlify("./action-scaffold.ts"),
           ifNotExists: true,
           config: {
@@ -76,6 +91,39 @@ export default function (
       },
     },
   };
+
+  const tasks = config.tasks ||= {};
+  const names = new Set<string>(Object.keys(tasks).map((k) => taskName(k)));
+  const defaultTasks: Record<string, TaskDefinition> = {
+    all: {
+      description: "Clean, generate, and build",
+      deps: ["generate", "clean", "build"],
+    },
+    clean: {
+      description: "Clean the build directory",
+      cmds: [
+        "cargo clean",
+        "rm -Rf build",
+      ],
+    },
+    build: {
+      description: "Build the module",
+      cmds: [
+        "mkdir -p build",
+        `cargo build --target wasm32-unknown-unknown --release`,
+        `cp target/wasm32-unknown-unknown/release/${wasmName} build/`,
+      ],
+    },
+    test: {
+      description: "Run tests",
+      cmds: ["cargo test"],
+    },
+  };
+  for (const key of Object.keys(defaultTasks)) {
+    if (!names.has(taskName(key))) {
+      tasks[key] = defaultTasks[key];
+    }
+  }
 
   return config;
 }

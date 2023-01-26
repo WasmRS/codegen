@@ -21,37 +21,44 @@ import {
   isService,
   UsesVisitor,
 } from "../deps/codegen/utils.ts";
+import { getImporter, getImports, GoVisitor } from "../deps/codegen/go.ts";
+import { IMPORTS } from "./constants.ts";
 
-export class MainVisitor extends BaseVisitor {
+export class MainVisitor extends GoVisitor {
   // Overridable visitor implementations
   usesVisitor = (writer: Writer): UsesVisitor =>
     new InterfaceUsesVisitor(writer);
   uses: UsesVisitor | undefined = undefined;
 
+  writeHead(context: Context): void {
+    const prev = context.config.package;
+    context.config.package = "main";
+    context.config.doNotEdit = false;
+    super.writeHead(context);
+    context.config.package = prev;
+  }
+
   visitNamespaceBefore(context: Context): void {
+    super.visitNamespaceBefore(context);
+
     const importPath = context.config.import ||
       context.config.module ||
       "github.com/myorg/mymodule/pkg/module";
-    super.visitNamespaceBefore(context);
+    const importer = getImports(context);
+    importer.firstparty(importPath);
 
     this.uses = this.usesVisitor(this.writer);
     context.namespace.accept(context, this.uses);
-
-    this.write(`package main
-
-    import (
-      "github.com/nanobus/iota/go/transport/wasmrs/guest"
-
-      "${importPath}"
-    )\n\n`);
   }
 
   visitAllOperationsBefore(context: Context): void {
+    const $ = getImporter(context, IMPORTS);
     this.write(`\n`);
 
     this.write(`func main() {\n`);
-    const packageName = context.config.package || "module";
-    this.write(`\t${packageName}.Initialize(guest.HostInvoker)\n\n`);
+    const packageName = getPackageName(context);
+
+    this.write(`\t${packageName}.Initialize(${$.guest}.HostInvoker)\n\n`);
     this.write(`// Create providers\n`);
     this.uses!.dependencies.forEach((dependency) => {
       this.write(
@@ -89,7 +96,7 @@ class HandlerRegistrationVisitor extends BaseVisitor {
     if (!isService(context)) {
       return;
     }
-    const packageName = context.config["package"] || "module";
+    const packageName = getPackageName(context);
     const { interface: iface } = context;
 
     this.write(
@@ -100,4 +107,15 @@ class HandlerRegistrationVisitor extends BaseVisitor {
       }Service)\n`,
     );
   }
+}
+
+function getPackageName(context: Context): string {
+  let packageName = context.config.import ||
+    context.config.module ||
+    "module";
+  const idx = packageName.lastIndexOf("/");
+  if (idx > 0) {
+    packageName = packageName.substring(idx + 1);
+  }
+  return packageName;
 }

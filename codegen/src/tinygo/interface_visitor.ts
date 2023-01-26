@@ -17,11 +17,13 @@ limitations under the License.
 import { Context, Kind, Stream, Writer } from "../deps/core/model.ts";
 import {
   expandType,
+  getImporter,
   InterfaceVisitor as GoInterfaceVisitor,
   setExpandStreamPattern,
   translateAlias,
 } from "../deps/codegen/go.ts";
 import { isVoid } from "../deps/codegen/utils.ts";
+import { IMPORTS } from "./constants.ts";
 
 export class InterfaceVisitor extends GoInterfaceVisitor {
   constructor(writer: Writer) {
@@ -31,18 +33,21 @@ export class InterfaceVisitor extends GoInterfaceVisitor {
 
   visitOperationReturn(context: Context): void {
     const { operation } = context;
+    const $ = getImporter(context, IMPORTS);
     const translate = translateAlias(context);
-    let rxWrapper = `mono.Mono`;
+    let rxWrapper;
     if (!isVoid(operation.type)) {
       let t = operation.type;
       if (t.kind == Kind.Stream) {
         const s = t as Stream;
         t = s.type;
-        rxWrapper = `flux.Flux`;
+        rxWrapper = `${$.flux}.Flux`;
+      } else {
+        rxWrapper = `${$.mono}.Mono`;
       }
       this.write(` ${rxWrapper}[${expandType(t, undefined, true, translate)}]`);
     } else {
-      this.write(` mono.Void`);
+      this.write(` ${$.mono}.Void`);
     }
   }
 }
