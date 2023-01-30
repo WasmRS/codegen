@@ -59,7 +59,9 @@ export function getOperationParts(operation: Operation): OperationParts {
   let returns = operation.type;
   if (streamIn || operation.type.kind == Kind.Stream) {
     rxType = streamIn ? "RequestChannel" : "RequestStream";
-    returns = (operation.type as Stream).type;
+    if (operation.type.kind == Kind.Stream) {
+      returns = (operation.type as Stream).type;
+    }
   }
 
   const unaryIn = operation.isUnary() && parameters.length > 0

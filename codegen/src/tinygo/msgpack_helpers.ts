@@ -32,6 +32,7 @@ import {
   expandType,
   fieldName,
   getImporter,
+  getImports,
   Import,
   returnShare,
   translateAlias,
@@ -63,6 +64,7 @@ export function msgpackRead(
   t: AnyType,
   prevOptional: boolean,
 ): string {
+  const imports = getImports(context);
   const $ = getImporter(context, IMPORTS);
   const tr = translateAlias(context);
   const returnPrefix = defaultVal == "" ? "" : `${defaultVal}, `;
@@ -109,6 +111,9 @@ export function msgpackRead(
       const prim = a.type as Primitive;
       const imp = aliases[a.name];
       if (imp && imp.parse) {
+        if (imp.import) {
+          imports.thirdparty(imp.import);
+        }
         if (prevOptional) {
           const decoder = msgpackDecodeNillableFuncs.get(prim.name)!;
           return `${prefix}${$.convert}.NillableParse(${imp.parse})(decoder.${decoder}())\n`;

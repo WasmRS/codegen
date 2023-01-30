@@ -33,6 +33,11 @@ export default function (
   config.config.aliases ||= {};
   config.generates ||= {};
 
+  const mode = config.config.mode || "export";
+  const mainRegenerate = config.config.mainRegenerate !== undefined
+    ? config.config.mainRegenerate as boolean
+    : true;
+
   const interfaces = doc.definitions
     .filter((d) => d.isKind(apex.ast.Kind.InterfaceDefinition))
     .map((d) => d as apex.ast.InterfaceDefinition);
@@ -64,84 +69,112 @@ export default function (
   const prefixCmd = config.config.prefixCmd != undefined
     ? config.config.prefixCmd
     : `cmd/`;
-  const prefixPkg = config.config.prefixPkg != undefined
-    ? config.config.prefixPkg
+  let prefixPkg = config.config.prefixPkg != undefined
+    ? config.config.prefixPkg as string
     : `pkg/`;
 
-  generates[`${prefixCmd}main.go`] = {
-    module: mod,
-    visitorClass: `MainVisitor`,
-    config: {
-      package: "main",
-      import: `${module}/pkg/${pkg}`,
-    },
-  };
+  if (prefixPkg.length > 0 && !prefixPkg.endsWith("/")) {
+    prefixPkg += "/";
+  }
 
-  generates[`${prefixPkg}${pkg}/interfaces.go`] = {
-    module: mod,
-    visitorClass: "InterfacesVisitor",
-  };
-
-  generates[`${prefixPkg}${pkg}/iota.go`] = {
-    module: "/Users/pkedy/go/src/github.com/apexlang/codegen/src/go/mod.ts",
-    visitorClass: "GoVisitor",
-    append: [
-      {
-        module: mod,
-        visitorClass: "MsgPackVisitor",
-      },
-      {
-        module: mod,
-        visitorClass: "ExportVisitor",
-      },
-      {
-        module: mod,
-        visitorClass: "ProviderVisitor",
-      },
-    ],
-  };
-
-  if (hasServices) {
-    generates[`${prefixPkg}${pkg}/services.go`] = {
-      ifNotExists: true,
+  if (mode == "export") {
+    generates[`${prefixCmd}main.go`] = {
+      ifNotExists: !mainRegenerate,
       module: mod,
-      visitorClass: `ScaffoldVisitor`,
+      visitorClass: `MainVisitor`,
       config: {
-        types: ["service", "events", "actors"],
+        package: "main",
+        import: `${module}/pkg/${pkg}`,
       },
+    };
+
+    generates[`${prefixPkg}${pkg}/interfaces.go`] = {
+      module: mod,
+      visitorClass: "InterfacesVisitor",
+    };
+
+    generates[`${prefixPkg}${pkg}/iota.go`] = {
+      module: "https://deno.land/x/apex_codegen@v0.1.6/go/mod.ts",
+      visitorClass: "GoVisitor",
+      append: [
+        {
+          module: mod,
+          visitorClass: "MsgPackVisitor",
+        },
+        {
+          module: mod,
+          visitorClass: "ExportVisitor",
+        },
+        {
+          module: mod,
+          visitorClass: "ProviderVisitor",
+        },
+      ],
+    };
+
+    if (hasServices) {
+      generates[`${prefixPkg}${pkg}/services.go`] = {
+        ifNotExists: true,
+        module: mod,
+        visitorClass: `ScaffoldVisitor`,
+        config: {
+          types: ["service", "events", "actors"],
+        },
+      };
+    }
+  } else if (mode == "import") {
+    generates[`${prefixPkg}${pkg}/iota.go`] = {
+      module: "https://deno.land/x/apex_codegen@v0.1.6/go/mod.ts",
+      visitorClass: "GoVisitor",
+      append: [
+        {
+          module: mod,
+          visitorClass: "InterfacesVisitor",
+        },
+        {
+          module: mod,
+          visitorClass: "MsgPackVisitor",
+        },
+        {
+          module: mod,
+          visitorClass: "ImportVisitor",
+        },
+      ],
     };
   }
 
-  const tasks = config.tasks ||= {};
-  const names = new Set<string>(Object.keys(tasks).map((k) => taskName(k)));
-  const defaultTasks: Record<string, TaskDefinition> = {
-    all: {
-      description: "Clean, generate, and build",
-      deps: ["clean", "generate", "deps", "build"],
-    },
-    clean: {
-      description: "Clean the build directory",
-      cmds: ["rm -Rf build"],
-    },
-    deps: {
-      description: "Install necessary dependencies",
-      cmds: ["go mod tidy"],
-    },
-    build: {
-      description: "Build the module",
-      cmds: [
-        "mkdir -p build",
-        `tinygo build -o build/${config.config.name}.wasm --scheduler=none --target=wasi -no-debug cmd/main.go`,
-      ],
-    },
-    test: {
-      description: "Run tests",
-      cmds: ["go test --count=1 ./pkg/..."],
-    },
-  };
-  for (const key of Object.keys(defaultTasks)) {
-    if (!names.has(taskName(key))) {
-      tasks[key] = defaultTasks[key];
+  if (mode == "export") {
+    const tasks = config.tasks ||= {};
+    const names = new Set<string>(Object.keys(tasks).map((k) => taskName(k)));
+    const defaultTasks: Record<string, TaskDefinition> = {
+      all: {
+        description: "Clean, generate, and build",
+        deps: ["clean", "generate", "deps", "build"],
+      },
+      clean: {
+        description: "Clean the build directory",
+        cmds: ["rm -Rf build"],
+      },
+      deps: {
+        description: "Install necessary dependencies",
+        cmds: ["go mod tidy"],
+      },
+      build: {
+        description: "Build the module",
+        cmds: [
+          "mkdir -p build",
+          `tinygo build -o build/${config.config.name}.wasm --scheduler=none --target=wasi -no-debug cmd/main.go`,
+        ],
+      },
+      test: {
+        description: "Run tests",
+        cmds: ["go test --count=1 ./pkg/..."],
+      },
+    };
+    for (const key of Object.keys(defaultTasks)) {
+      if (!names.has(taskName(key))) {
+        tasks[key] = defaultTasks[key];
+      }
     }
   }
 

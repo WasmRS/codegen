@@ -98,7 +98,9 @@ export class InvokersVisitor extends GoVisitor {
       );
     } else {
       this.write(
-        `func ${methodName(operation, operation.name)}(ctx ${$.context}.Context`,
+        `func ${
+          methodName(operation, operation.name)
+        }(ctx ${$.context}.Context`,
       );
     }
 
@@ -119,15 +121,17 @@ export class InvokersVisitor extends GoVisitor {
     if (unaryIn) {
       if (unaryIn.type.kind == Kind.Enum) {
         this
-          .write(`payloadData, err := ${$.msgpack}.I32ToBytes(int32(${
-            parameterName(
-              unaryIn,
-              unaryIn.name,
-            )
-          }))
+          .write(
+            `payloadData, err := ${$.msgpack}.I32ToBytes(int32(${
+              parameterName(
+                unaryIn,
+                unaryIn.name,
+              )
+            }))
         if err != nil {
           return ${returnPackage}.Error[${returnType}](err)
-        }\n`);
+        }\n`,
+          );
       } else if (unaryIn.type.kind == Kind.Alias) {
         // const a = unaryIn.type as Alias;
         // const primitiveExpanded = expandType(a.type, undefined, false, tr);
@@ -207,7 +211,9 @@ export class InvokersVisitor extends GoVisitor {
           const a = streamIn.type as Alias;
           if (a.type.kind == Kind.Primitive) {
             const p = a.type as Primitive;
-            transformFn = `${$.transform}.${capitalize(p.name)}Encode[${a.name}]`;
+            transformFn = `${$.transform}.${
+              capitalize(p.name)
+            }Encode[${a.name}]`;
           } else {
             const expanded = expandType(a.type, undefined, undefined, tr);
             transformFn = `func(value ${a.name}) (payload.Payload, error) {
@@ -232,12 +238,17 @@ export class InvokersVisitor extends GoVisitor {
         }
       }
       const inMap = `${$.flux}.Map(${streamIn.parameter.name}, ${transformFn})`;
-      this.write(`future := gCaller.${type}(ctx, pl, ${inMap})\n`);
+      if (returns && operation.type.kind != Kind.Stream && !isVoid(returns)) {
+        this.write(`futureStream := gCaller.${type}(ctx, pl, ${inMap})\n`);
+        this.write("future := transform.FluxToMono(futureStream)\n");
+      } else {
+        this.write(`future := gCaller.${type}(ctx, pl, ${inMap})\n`);
+      }
     } else {
       this.write(`future := gCaller.${type}(ctx, pl)\n`);
     }
-    if (!returns || isVoid(returns)) {
-      this.write(`return ${$.mono}.Map(future, ${$.transform}.Void.Decode)\n`);
+    if (streamIn && (!returns || isVoid(returns))) {
+      this.write("return transform.FluxToVoid(future)\n");
     } else if (returns.kind == Kind.Alias) {
       const a = returns as Alias;
       if (a.type.kind == Kind.Primitive) {
@@ -272,6 +283,10 @@ export class InvokersVisitor extends GoVisitor {
       const expanded = expandType(l.type, undefined, undefined, tr);
       this.write(
         `return ${returnPackage}.Map(future, ${$.transform}.SliceDecode[${expanded}])\n`,
+      );
+    } else if (!returns || isVoid(returns)) {
+      this.write(
+        `return ${returnPackage}.Map(future, ${$.transform}.Void.Decode)\n`,
       );
     } else {
       this.write(
