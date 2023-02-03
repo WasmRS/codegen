@@ -5,6 +5,7 @@ import {
   ObjectMap,
   Operation,
   Parameter,
+  Stream,
 } from "../../deps/core/model.ts";
 import { rust } from "../../deps/codegen/mod.ts";
 import { convertDescription } from "../utils/conversions.ts";
