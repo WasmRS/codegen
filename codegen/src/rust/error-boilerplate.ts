@@ -7,8 +7,13 @@ export default class DefaultVisitor extends model.BaseVisitor {
     this.write(`
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
-    #[error("Just an example")]
-    ExampleError,
+  #[error(transparent)]
+  PayloadError(#[from] wasmrs_guest::PayloadError),
+  #[error(transparent)]
+  Protocol(#[from] wasmrs_guest::Error),
+
+  #[error("An example of a custom error variant")]
+  ExampleError,
 }
     `);
   }

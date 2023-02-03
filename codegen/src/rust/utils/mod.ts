@@ -34,12 +34,11 @@ export function constantCase(str: string): string {
 }
 
 export function determineVariant(operation: Operation): ActionKind {
-  const numInputs = operation.parameters.length;
   const numInputStream =
     operation.parameters.filter((p) => p.type.kind === Kind.Stream).length;
   const isOutputStream = operation.type.kind === Kind.Stream;
 
-  if (numInputStream == 1 && numInputs === 1 && isOutputStream) {
+  if (numInputStream > 0) {
     return ActionKind.RequestChannel;
   } else if (numInputStream === 0 && isOutputStream) {
     return ActionKind.RequestStream;
@@ -82,4 +81,12 @@ export class Actions {
       this[ActionKind.RequestStream].length +
       this[ActionKind.RequestChannel].length;
   }
+}
+
+export function stream(p: Parameter): boolean {
+  return p.type.kind === Kind.Stream;
+}
+
+export function nonStream(p: Parameter): boolean {
+  return p.type.kind !== Kind.Stream;
 }

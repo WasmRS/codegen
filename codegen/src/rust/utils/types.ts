@@ -18,7 +18,9 @@ export function convertType(
 ): string {
   if (typ.kind === Kind.Stream) {
     const t = typ as Stream;
-    return utils.types.apexToRustType(t.type, config, asRef, lifetime);
+    return `FluxReceiver<${
+      utils.types.apexToRustType(t.type, config, asRef, lifetime)
+    },PayloadError>`;
   } else {
     return utils.types.apexToRustType(typ, config, asRef, lifetime);
   }

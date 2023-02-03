@@ -1,6 +1,7 @@
 import {
   Context,
   Interface,
+  Kind,
   ObjectMap,
   Operation,
   Parameter,
@@ -42,15 +43,15 @@ export class ServiceVisitor extends SourceGenerator<Interface> {
     const comment = convertDescription(this.node.description);
 
     const traitImpls = Object.entries(this.ops)
-      .map(([name, deets]) => {
+      .map(([name, details]) => {
         const rusty_name = rustify(name);
-        switch (deets.variant) {
+        switch (details.variant) {
           case ActionKind.RequestResponse:
-            return `${deets.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs.await?).await?)}`;
+            return `${details.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs).await?)}`;
           case ActionKind.RequestStream:
-            return `${deets.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs.await?, outputs).await?)}`;
+            return `${details.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs).await?)}`;
           case ActionKind.RequestChannel:
-            return `${deets.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs, outputs).await?)}`;
+            return `${details.traitSignature} { Ok(crate::actions::${iface}::${rusty_name}::task(inputs).await?)}`;
           default:
             throw new Error("Invalid action kind");
         }
@@ -124,7 +125,7 @@ export function convertOperation(
     traitFn = `
     ${trimLines([comment])}
     async fn ${name}(
-      inputs: Mono<${service_module}::${name}::Inputs, PayloadError>,
+      inputs: ${service_module}::${name}::Inputs,
     ) -> Result<${service_module}::${name}::Outputs, GenericError>
     `;
 
@@ -132,14 +133,48 @@ export function convertOperation(
     fn ${name}_wrapper(input: IncomingMono) -> Result<OutgoingMono, GenericError> {
       let (tx, rx) = runtime::oneshot();
 
-      let input = Mono::from_future(input.map(|r| r.map(|v| Ok(deserialize(&v.data)?))?));
-      let task = ${component_name}::
+      let input = deserialize_helper(input);
+
+      let task = async move {
+
+        let input_payload = match input.await {
+          Ok(i) => i,
+          Err(e) => {
+            let _ = tx.send(Err(e));
+            return;
+          }
+        };
+        use wasmrs_guest::Value;
+        fn des(mut map: std::collections::BTreeMap<String, Value>) -> Result<${service_module}::${name}::Inputs, Error> {
+          Ok(${service_module}::${name}::Inputs {
+            ${
+      op.parameters
+        .map((p) => {
+          return `${rustify(p.name)}: <${
+            convertType(p.type, config)
+          } as serde::Deserialize>::deserialize(map.remove("${p.name}").ok_or_else(|| wasmrs_guest::Error::MissingInput("${p.name}".to_owned()))?).map_err(|e| wasmrs_guest::Error::Decode(e.to_string()))?,`;
+        })
+        .join("\n")
+    }
+          })
+        }
+
+        let input = match des(input_payload) {
+          Ok(i) => i,
+          Err(e) => {
+            let _ = tx.send(Err(PayloadError::application_error(e.to_string())));
+            return;
+          }
+        };
+
+        ${component_name}::
           ${name}(input)
+          .await
           .map(|result| {
-              let output = result?;
-              Ok(serialize(&output).map(|bytes| Payload::new_data(None, Some(bytes.into())))?)
+              Ok(serialize(&result).map(|bytes| Payload::new_data(None, Some(bytes.into())))?)
           })
           .map(|output| tx.send(output).unwrap());
+      };
 
       spawn(task);
 
@@ -149,9 +184,8 @@ export function convertOperation(
     traitFn = `
     ${trimLines([comment])}
     async fn ${name}(
-      inputs: Mono<${service_module}::${name}::Inputs, PayloadError>,
-      outputs: Flux<${service_module}::${name}::Outputs, PayloadError>
-    ) -> Result<Flux<${service_module}::${name}::Outputs, PayloadError>, GenericError>
+      inputs: ${service_module}::${name}::Inputs,
+    ) -> Result<${service_module}::${name}::Outputs, GenericError>
     `;
 
     wrapper = `
@@ -163,26 +197,53 @@ export function convertOperation(
       let input = deserialize_helper(input);
 
       spawn(async move {
-          let task = Self {};
-          let (outputs_tx, mut outputs_rx) = Flux::new_channels();
-          let outputs = outputs_tx;
-          match ${component_name}::${name}(input, outputs).await {
-              Ok(_) => {
-                  while let Some(next) = outputs_rx.next().await {
-                      let out = match next {
-                          Ok(output) => match serialize(&output) {
-                              Ok(bytes) => Ok(Payload::new_data(None, Some(bytes.into()))),
-                              Err(e) => Err(PayloadError::application_error(e.to_string())),
-                          },
-                          Err(e) => Err(e),
-                      };
-                      let _ = out_tx.send_result(out);
-                  }
-                  out_tx.complete();
+          let input_payload = match input.await {
+            Ok(i) => i,
+            Err(e) => {
+              let _ = out_tx.error(e);
+              return;
+            }
+          };
+          use wasmrs_guest::Value;
+          fn des(mut map: std::collections::BTreeMap<String, Value>) -> Result<${service_module}::${name}::Inputs, Error> {
+            Ok(${service_module}::${name}::Inputs {
+              ${
+      op.parameters
+        .map((p) => {
+          return `${rustify(p.name)}: <${
+            convertType(p.type, config)
+          } as serde::Deserialize>::deserialize(map.remove("${p.name}").ok_or_else(|| wasmrs_guest::Error::MissingInput("${p.name}".to_owned()))?).map_err(|e| wasmrs_guest::Error::Decode(e.to_string()))?,`;
+        })
+        .join("\n")
+    }
+            })
+          }
+
+          let input = match des(input_payload) {
+            Ok(i) => i,
+            Err(e) => {
+              let _ = out_tx.error(PayloadError::application_error(e.to_string()));
+              return;
+            }
+          };
+
+          match ${component_name}::${name}(input).await {
+            Ok(mut result) => {
+              while let Some(next) = result.next().await {
+                let out = match next {
+                  Ok(output) => match serialize(&output) {
+                    Ok(bytes) => Ok(Payload::new_data(None, Some(bytes.into()))),
+                    Err(e) => Err(PayloadError::application_error(e.to_string())),
+                  },
+                  Err(e) => Err(e),
+                };
+                let _ = out_tx.send_result(out);
               }
-              Err(e) => {
-                  let _ = out_tx.error(PayloadError::application_error(e.to_string()));
-              }
+              out_tx.complete();
+            }
+            Err(e) => {
+              let _ = out_tx.error(PayloadError::application_error(e.to_string()));
+            }
           };
       });
 
@@ -192,9 +253,8 @@ export function convertOperation(
     traitFn = `
     ${trimLines([comment])}
     async fn ${name}(
-      inputs: FluxReceiver<${service_module}::${name}::Inputs, PayloadError>,
-      outputs: Flux<${service_module}::${name}::Outputs, PayloadError>
-    ) -> Result<Flux<${service_module}::${name}::Outputs, PayloadError>, GenericError>
+      inputs: ${service_module}::${name}::Inputs,
+    ) -> Result<${service_module}::${name}::Outputs, GenericError>
     `;
 
     wrapper = `
@@ -202,34 +262,116 @@ export function convertOperation(
       // generated
       let (inputs_tx, inputs_rx) = Flux::<${service_module}::${name}::Inputs, PayloadError>::new_channels();
 
-      spawn(async move {
-          while let Ok(Some(Ok(payload))) = input.recv().await {
-              inputs_tx.send_result(deserialize(&payload.data).map_err(|e| e.into()));
-          }
-      });
+      ${
+      op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
+        `let (real_${rustify(p.name)}_tx, real_${
+          rustify(p.name)
+        }_rx) = Flux::new_channels();`
+      ).join("\n")
+    }
+
       let (real_out_tx, real_out_rx) = Flux::new_channels();
-      let (outputs_tx, mut outputs_rx) = Flux::new_channels();
 
+
+      ${
+      op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
+        `let ${rustify(p.name)}_inner_tx = real_${rustify(p.name)}_tx.clone();`
+      ).join("\n")
+    }
       spawn(async move {
-          while let Some(result) = outputs_rx.next().await {
-              match result {
-                  Ok(payload) => match serialize(&payload) {
-                      Ok(bytes) => {
-                          real_out_tx.send(Payload::new_data(None, Some(Bytes::from(bytes))));
-                      }
-                      Err(e) => {
-                          real_out_tx.error(PayloadError::application_error(e.to_string()));
-                      }
-                  },
-                  Err(err) => {
-                      real_out_tx.error(err);
-                  }
+          let input_map = if let Ok(Some(Ok(first))) = input.recv().await {
+
+            use wasmrs_guest::Value;
+            let des = move |payload: ParsedPayload| -> Result<${service_module}::${name}::Inputs, Error> {
+              println!("deserializing {:2x?}", payload.data);
+              let mut map = deserialize_generic(&payload.data)?;
+                let input = ${service_module}::${name}::Inputs {
+                ${
+      op.parameters.filter((p) => p.type.kind !== Kind.Stream)
+        .map((p) => {
+          return `${rustify(p.name)}: <${
+            convertType(p.type, config)
+          } as serde::Deserialize>::deserialize(map.remove("${p.name}").ok_or_else(|| wasmrs_guest::Error::MissingInput("${p.name}".to_owned()))?).map_err(|e| wasmrs_guest::Error::Decode(e.to_string()))?,`;
+        })
+        .join("\n")
+    }
+    ${
+      op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
+        `${rustify(p.name)}: real_${rustify(p.name)}_rx,`
+      ).join("\n")
+    }
+              };
+            println!("map: {:?}",map);
+
+              ${
+      op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
+        `if let Some(v) = map.remove("${p.name}") {
+          println!("value: {:?}",v);
+          ${rustify(p.name)}_inner_tx.send_result(<${
+          convertType((p.type as Stream).type, config)
+        } as serde::Deserialize>::deserialize(v).map_err(|e| PayloadError::application_error(e.to_string())));
+        }`
+      ).join("\n")
+    }
+              Ok(input)
+            };
+
+            spawn(async move {
+
+              while let Ok(Some(Ok(payload))) = input.recv().await {
+                if let Ok(mut payload) = deserialize_generic(&payload.data) {
+                  ${
+      op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) => {
+        const t = p.type as Stream;
+        return `
+                    if let Some(a) = payload.remove("${p.name}") {
+                      real_${rustify(p.name)}_tx.send_result(
+                        <${
+          convertType(t.type, config)
+        } as serde::Deserialize>::deserialize(a)
+                          .map_err(|e| PayloadError::application_error(e.to_string())),
+                      );
+                    }
+  `;
+      }).join("\n")
+    }
+                } else {
+                  break;
+                }
               }
-          }
-      });
+            });
 
-      spawn(async move {
-          let _result = ${component_name}::${name}(inputs_rx, outputs_tx).await;
+            match des(first) {
+              Ok(i) => i,
+              Err(e) => {
+                let _ = real_out_tx.error(PayloadError::application_error(e.to_string()));
+                return;
+              }
+            }
+          } else {
+            return;
+          };
+          let result = ${component_name}::${name}(input_map).await;
+          if let Err(e) = result {
+              real_out_tx.error(PayloadError::application_error(e.to_string()));
+          } else {
+            let mut result = result.unwrap();
+            while let Some(result) = result.next().await {
+              match result {
+                Ok(output) => {
+                  let _ = real_out_tx.send_result(
+                    serialize(&output)
+                      .map(|b| Payload::new_data(None, Some(b.into())))
+                      .map_err(|e| PayloadError::application_error(e.to_string())),
+                  );
+                }
+                Err(e) => {
+                  let _ = real_out_tx.error(e);
+                }
+              }
+            }
+          }
+
       });
 
       Ok(real_out_rx)
@@ -240,7 +382,7 @@ export function convertOperation(
   }
 
   let types;
-  if (variant === ActionKind.RequestChannel) {
+  if (op.unary) {
     const arg = op.parameters[0] as Parameter;
     types = `
       pub mod ${name} {
@@ -255,7 +397,6 @@ export function convertOperation(
     const inputFields = op.parameters
       .map((p) => {
         return `
-  #[serde(rename = "${p.name}")]
   pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
   `;
       })
@@ -264,7 +405,7 @@ export function convertOperation(
       pub mod ${name} {
         #[allow(unused_imports)]
         pub(crate) use super::*;
-        #[derive(serde::Deserialize)]
+
         pub(crate) struct Inputs {
           ${inputFields}
         }

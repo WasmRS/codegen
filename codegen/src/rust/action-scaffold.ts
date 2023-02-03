@@ -17,12 +17,12 @@ export default class DefaultVisitor extends model.BaseVisitor {
     `);
     if (context.config.variant === ActionKind.RequestChannel) {
       this.write(`
-      pub(crate) async fn task(mut input: FluxReceiver<Inputs, PayloadError>, outputs: Flux<Outputs, PayloadError>) -> Result<Flux<Outputs, PayloadError>, crate::Error> {
+      pub(crate) async fn task(mut input:Inputs) -> Result<Outputs, crate::Error> {
         todo!("Add implementation");
       }`);
     } else if (context.config.variant === ActionKind.RequestStream) {
       this.write(`
-      pub(crate) async fn task(input: Inputs, outputs: Flux<Outputs, PayloadError>) -> Result<Flux<Outputs, PayloadError>, crate::Error> {
+      pub(crate) async fn task(input: Inputs) -> Result<Outputs, crate::Error> {
         todo!("Add implementation");
       }`);
     } else {

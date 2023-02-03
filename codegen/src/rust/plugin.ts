@@ -82,6 +82,7 @@ export default function (
     config: {
       modules,
       serde: true,
+      bytes: "wasmrs_guest::Bytes",
       derive: {
         _all: [],
       },

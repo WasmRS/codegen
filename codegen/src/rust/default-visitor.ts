@@ -19,6 +19,19 @@ export default class DefaultVisitor extends codegen.rust.RustBasic {
 
   visitContextBefore(context: Context): void {
     super.visitContextBefore(context);
+    if (context.config.modules) {
+      Object.entries(
+        context.config.modules as Record<string, string[]>,
+      ).forEach(([iface, actions]: [string, string[]]) => {
+        this.append(`
+        pub(crate) mod ${iface} {
+          pub(crate) use super::*;
+          ${actions.map((a) => `pub(crate) mod ${a};`).join("\n")}
+        }
+        `);
+      });
+    }
+
     this.append(`
 use wasmrs_guest::FutureExt;
 
@@ -30,12 +43,16 @@ extern "C" fn __wasmrs_init(
     host_buffer_size: u32,
     max_host_frame_len: u32,
 ) {
+    wasmrs_guest::init_logging();
+
     init_exports();
     init_imports();
     wasmrs_guest::init(guest_buffer_size, host_buffer_size, max_host_frame_len);
 }
 
-fn deserialize_helper<T: serde::de::DeserializeOwned + 'static>(i: Mono<ParsedPayload, PayloadError>) -> Mono<T, PayloadError> {
+fn deserialize_helper(
+  i: Mono<ParsedPayload, PayloadError>,
+) -> Mono<std::collections::BTreeMap<String, wasmrs_guest::Value>, PayloadError> {
   Mono::from_future(async move {
     match i.await {
       Ok(bytes) => match deserialize(&bytes.data) {
@@ -46,21 +63,7 @@ fn deserialize_helper<T: serde::de::DeserializeOwned + 'static>(i: Mono<ParsedPa
     }
   })
 }
-
 `);
-
-    if (context.config.modules) {
-      Object.entries(
-        context.config.modules as Record<string, string[]>,
-      ).forEach(([iface, actions]: [string, string[]]) => {
-        this.write(`
-        pub(crate) mod ${iface} {
-          pub(crate) use super::*;
-          ${actions.map((a) => `pub(crate) mod ${a};`).join("\n")}
-        }
-        `);
-      });
-    }
   }
 
   visitContextAfter(context: Context): void {
