@@ -145,7 +145,8 @@ export function convertOperation(
             return;
           }
         };
-        use wasmrs_guest::Value;
+
+        #[allow(unused)]
         fn des(mut map: std::collections::BTreeMap<String, Value>) -> Result<${service_module}::${name}::Inputs, Error> {
           Ok(${service_module}::${name}::Inputs {
             ${
@@ -168,13 +169,13 @@ export function convertOperation(
           }
         };
 
-        ${component_name}::
+        let _ = ${component_name}::
           ${name}(input)
           .await
           .map(|result| {
               Ok(serialize(&result).map(|bytes| Payload::new_data(None, Some(bytes.into())))?)
           })
-          .map(|output| tx.send(output).unwrap());
+          .map(|output| {let _ = tx.send(output);});
       };
 
       spawn(task);
@@ -205,7 +206,7 @@ export function convertOperation(
               return;
             }
           };
-          use wasmrs_guest::Value;
+
           fn des(mut map: std::collections::BTreeMap<String, Value>) -> Result<${service_module}::${name}::Inputs, Error> {
             Ok(${service_module}::${name}::Inputs {
               ${
@@ -260,8 +261,7 @@ export function convertOperation(
 
     wrapper = `
     fn ${name}_wrapper(input: IncomingStream) -> Result<OutgoingStream, GenericError> {
-      // generated
-      let (inputs_tx, inputs_rx) = Flux::<${service_module}::${name}::Inputs, PayloadError>::new_channels();
+      // let (inputs_tx, inputs_rx) = Flux::<${service_module}::${name}::Inputs, PayloadError>::new_channels();
 
       ${
       op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
@@ -282,7 +282,6 @@ export function convertOperation(
       spawn(async move {
           let input_map = if let Ok(Some(Ok(first))) = input.recv().await {
 
-            use wasmrs_guest::Value;
             let des = move |payload: ParsedPayload| -> Result<${service_module}::${name}::Inputs, Error> {
               println!("deserializing {:2x?}", payload.data);
               let mut map = deserialize_generic(&payload.data)?;
@@ -307,8 +306,7 @@ export function convertOperation(
               ${
       op.parameters.filter((p) => p.type.kind === Kind.Stream).map((p) =>
         `if let Some(v) = map.remove("${p.name}") {
-          println!("value: {:?}",v);
-          ${rustify(p.name)}_inner_tx.send_result(<${
+          let _ = ${rustify(p.name)}_inner_tx.send_result(<${
           convertType((p.type as Stream).type, config)
         } as serde::Deserialize>::deserialize(v).map_err(|e| PayloadError::application_error(e.to_string())));
         }`
@@ -326,7 +324,7 @@ export function convertOperation(
         const t = p.type as Stream;
         return `
                     if let Some(a) = payload.remove("${p.name}") {
-                      real_${rustify(p.name)}_tx.send_result(
+                      let _ = real_${rustify(p.name)}_tx.send_result(
                         <${
           convertType(t.type, config)
         } as serde::Deserialize>::deserialize(a)
@@ -354,7 +352,7 @@ export function convertOperation(
           };
           let result = ${component_name}::${name}(input_map).await;
           if let Err(e) = result {
-              real_out_tx.error(PayloadError::application_error(e.to_string()));
+              let _ = real_out_tx.error(PayloadError::application_error(e.to_string()));
           } else {
             let mut result = result.unwrap();
             while let Some(result) = result.next().await {

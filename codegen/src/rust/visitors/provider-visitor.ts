@@ -271,7 +271,7 @@ pub(crate) fn ${name}(
       let payload = payload.unwrap();
       let message = OpInputs::${rustifyCaps(p.name)}(payload);
       let payload = wasmrs_guest::serialize(&message).map(|b| Payload::new_data(None, Some(b.into()))).map_err(|e|PayloadError::application_error(e.to_string()));
-      tx_inner.send_result(payload);
+      let _ = tx_inner.send_result(payload);
     }
   });
   `)

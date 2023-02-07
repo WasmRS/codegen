@@ -25,7 +25,6 @@ export default class DefaultVisitor extends codegen.rust.RustBasic {
       ).forEach(([iface, actions]: [string, string[]]) => {
         this.append(`
         pub(crate) mod ${iface} {
-          pub(crate) use super::*;
           ${actions.map((a) => `pub(crate) mod ${a};`).join("\n")}
         }
         `);
@@ -33,8 +32,6 @@ export default class DefaultVisitor extends codegen.rust.RustBasic {
     }
 
     this.append(`
-use wasmrs_guest::FutureExt;
-
 use wasmrs_guest::*;
 
 #[no_mangle]
