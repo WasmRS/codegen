@@ -6,6 +6,8 @@ import * as apex from "../deps/core/mod.ts";
 import * as rust from "../deps/codegen/rust.ts";
 import { Context, Operation } from "../deps/core/model.ts";
 import { determineVariant } from "./utils/mod.ts";
+import { parse } from "https://deno.land/std@0.177.0/encoding/toml.ts";
+
 const utils = rust.utils;
 
 const importUrl = new URL(".", import.meta.url);
@@ -33,6 +35,16 @@ export default function (
 
   const { module } = config.config;
   config.config.name ||= module;
+  try {
+    const cargoToml = Deno.readTextFileSync("./Cargo.toml");
+    const cargo = parse(cargoToml) as any;
+    config.config.name ||= cargo.package.name;
+  } catch {}
+  if (!config.config.name) {
+    throw new Error(
+      "No name provided in config, and no Cargo.toml found with a name",
+    );
+  }
   const wasmName = `${(config.config.name as string).replace("-", "_")}.wasm`;
 
   const interfaces = doc.definitions.filter(
