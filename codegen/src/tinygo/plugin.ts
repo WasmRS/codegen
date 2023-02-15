@@ -1,7 +1,7 @@
 import {
   Configuration,
   TaskDefinition,
-} from "https://deno.land/x/apex_cli@v0.0.15/src/config.ts";
+} from "https://deno.land/x/apex_cli@v0.0.18/src/config.ts";
 import * as apex from "../deps/core/mod.ts";
 
 const importUrl = new URL(".", import.meta.url);
@@ -33,7 +33,8 @@ export default function (
   config.config.aliases ||= {};
   config.generates ||= {};
 
-  const mode = config.config.mode || "export";
+  const transport = config.config.transport as string || "wasmrs";
+  const mode = config.config.mode as string || "export";
   const mainRegenerate = config.config.mainRegenerate !== undefined
     ? config.config.mainRegenerate as boolean
     : true;
@@ -67,34 +68,31 @@ export default function (
   config.generates = generates;
 
   const prefixCmd = config.config.prefixCmd != undefined
-    ? config.config.prefixCmd
-    : `cmd/`;
-  let prefixPkg = config.config.prefixPkg != undefined
+    ? config.config.prefixCmd as string
+    : `cmd`;
+  const prefixPkg = config.config.prefixPkg != undefined
     ? config.config.prefixPkg as string
-    : `pkg/`;
-
-  if (prefixPkg.length > 0 && !prefixPkg.endsWith("/")) {
-    prefixPkg += "/";
-  }
+    : `pkg/${pkg}`;
 
   if (mode == "export") {
-    generates[`${prefixCmd}main.go`] = {
+    generates[`${trailingSlash(prefixCmd)}main.go`] = {
       ifNotExists: !mainRegenerate,
       module: mod,
       visitorClass: `MainVisitor`,
       config: {
         package: "main",
-        import: `${module}/pkg/${pkg}`,
+        import: `${module}/${prefixPkg}`,
+        transport: transport,
       },
     };
 
-    generates[`${prefixPkg}${pkg}/interfaces.go`] = {
+    generates[`${trailingSlash(prefixPkg)}interfaces.go`] = {
       module: mod,
       visitorClass: "InterfacesVisitor",
     };
 
-    generates[`${prefixPkg}${pkg}/iota.go`] = {
-      module: "https://deno.land/x/apex_codegen@v0.1.6/go/mod.ts",
+    generates[`${trailingSlash(prefixPkg)}iota.go`] = {
+      module: "https://deno.land/x/apex_codegen@v0.1.9/go/mod.ts",
       visitorClass: "GoVisitor",
       append: [
         {
@@ -113,7 +111,7 @@ export default function (
     };
 
     if (hasServices) {
-      generates[`${prefixPkg}${pkg}/services.go`] = {
+      generates[`${trailingSlash(prefixPkg)}services.go`] = {
         ifNotExists: true,
         module: mod,
         visitorClass: `ScaffoldVisitor`,
@@ -123,8 +121,8 @@ export default function (
       };
     }
   } else if (mode == "import") {
-    generates[`${prefixPkg}${pkg}/iota.go`] = {
-      module: "https://deno.land/x/apex_codegen@v0.1.6/go/mod.ts",
+    generates[`${trailingSlash(prefixPkg)}iota.go`] = {
+      module: "https://deno.land/x/apex_codegen@v0.1.9/go/mod.ts",
       visitorClass: "GoVisitor",
       append: [
         {
@@ -179,4 +177,11 @@ export default function (
   }
 
   return config;
+}
+
+function trailingSlash(value: string): string {
+  if (!value.endsWith("/")) {
+    return value + "/";
+  }
+  return value;
 }

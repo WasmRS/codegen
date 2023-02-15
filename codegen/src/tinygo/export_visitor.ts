@@ -14,9 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-import {
-  Context,
-} from "../deps/core/model.ts";
+import { Context } from "../deps/core/model.ts";
 import { GoVisitor } from "../deps/codegen/go.ts";
 import { WrappersVisitor } from "./wrappers_visitor.ts";
 import { RegisterVisitor } from "./register_visitor.ts";

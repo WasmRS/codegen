@@ -45,7 +45,9 @@ export class InterfaceVisitor extends GoInterfaceVisitor {
       } else {
         rxWrapper = `${$.mono}.Mono`;
       }
-      this.write(` ${rxWrapper}[${expandType(t, undefined, true, translate)}]`);
+      this.write(
+        ` ${rxWrapper}[${expandType(t, undefined, true, translate)}]`,
+      );
     } else {
       this.write(` ${$.mono}.Void`);
     }

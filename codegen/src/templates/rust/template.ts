@@ -2,7 +2,7 @@
 import {
   FSStructure,
   Template,
-} from "https://deno.land/x/apex_cli@v0.0.15/src/config.ts";
+} from "https://deno.land/x/apex_cli@v0.0.18/src/config.ts";
 
 const importUrl = new URL(".", import.meta.url);
 function urlify(relpath: string): string {

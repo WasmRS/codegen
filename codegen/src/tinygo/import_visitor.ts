@@ -29,6 +29,7 @@ import { IMPORTS } from "./constants.ts";
 export class ImportBaseVisitor extends GoVisitor {
   private hasAny: (context: Context) => boolean;
   private filter: (context: Context) => boolean;
+  private resources = new Set<string>();
 
   constructor(
     writer: Writer,
@@ -47,39 +48,79 @@ export class ImportBaseVisitor extends GoVisitor {
   visitNamespace(context: Context): void {
     const { namespace: ns } = context;
     const $ = getImporter(context, IMPORTS);
-    
-    if (!this.hasAny(context)) {
-      this.write(`
-    var (
-      gCaller ${$.invoke}.Caller
-    )
 
-    func Initialize(caller ${$.invoke}.Caller) {
-      gCaller = caller
-    }\n\n`);
-      return;
-    }
+    const importedFuncs = Object.values(ns.functions).filter((oper) => {
+      const c = context.clone({ operation: oper });
+      return !this.filter(c);
+    });
+    const importedIfaces = Object.values(ns.interfaces).filter((iface) => {
+      const c = context.clone({ interface: iface });
+      return !this.filter(c) || this.resources.has(iface.name);
+    });
 
-    const importedFuncs = Object.values(ns.functions).filter((f) =>
-      isProvider(context.clone({ operation: f }))
-    );
+    this.write(`type Dependencies struct {\n`);
+    importedFuncs.forEach((f) => {
+      this.write(`${methodName(f, f.name)} ${methodName(f, f.name)}Fn\n`);
+    });
+    importedIfaces.forEach((i) => {
+      this.write(`${i.name} ${i.name}\n`);
+    });
+    this.write(`}\n\n`);
 
-    this.write(`var (
-      gCaller ${$.invoke}.Caller\n`);
+    this.write(`type Client struct {
+      caller invoke.Caller\n`);
+    importedFuncs.forEach((f) => {
+      this.write(
+        `_op${methodName(f, f.name)} uint32\n`,
+      );
+    });
+    importedIfaces.forEach((i) => {
+      i.operations.forEach((o) => {
+        this.write(
+          `_op${i.name}${methodName(o, o.name)} uint32\n`,
+        );
+      });
+    });
+    this.write(`}
+
+    func New(caller invoke.Caller) *Client {
+      return &Client{
+        caller: caller,\n`);
 
     importedFuncs.forEach((f) => {
       const parts = getOperationParts(f);
       this.write(
         `_op${
           methodName(f, f.name)
-        } = ${$.invoke}.Import${parts.type}("${ns.name}", "${f.name}")\n`,
+        }: ${$.invoke}.Import${parts.type}("${ns.name}", "${f.name}"),\n`,
       );
     });
+    importedIfaces.forEach((i) => {
+      i.operations.forEach((o) => {
+        const parts = getOperationParts(o);
+        this.write(
+          `_op${i.name}${
+            methodName(o, o.name)
+          }: ${$.invoke}.Import${parts.type}("${ns.name}.${i.name}", "${o.name}"),\n`,
+        );
+      });
+    });
 
-    this.write(`)
+    this.write(`}\n}\n`);
 
-    func Initialize(caller ${$.invoke}.Caller) {
-      gCaller = caller
+    this.write(`func (c *Client) Dependencies() Dependencies {
+      return Dependencies{\n`);
+    importedFuncs.forEach((f) => {
+      this.write(`${methodName(f, f.name)}: c.${methodName(f, f.name)},\n`);
+    });
+    importedIfaces.forEach((i) => {
+      this.write(`${i.name}: c.${i.name}(),\n`);
+    });
+    this.write(`}\n}
+
+    func GetDependencies(caller invoke.Caller) Dependencies {
+      c := New(caller)
+      return c.Dependencies()
     }\n\n`);
   }
 
@@ -87,21 +128,21 @@ export class ImportBaseVisitor extends GoVisitor {
     if (this.filter(context)) {
       return;
     }
-    const invokersVisitor = new InvokersVisitor(this.writer);
+    const invokersVisitor = new InvokersVisitor(this.writer, this.resources);
     context.operation.accept(context, invokersVisitor);
   }
 
   visitInterface(context: Context): void {
-    if (this.filter(context)) {
+    const { interface: iface } = context;
+    if (this.filter(context) && !this.resources.has(iface.name)) {
       return;
     }
-    const { interface: iface } = context;
 
     const providerStructVisitor = new ProviderStructVisitor(this.writer);
     iface.accept(context, providerStructVisitor);
     const providerNewVisitor = new ProviderNewVisitor(this.writer);
     iface.accept(context, providerNewVisitor);
-    const invokersVisitor = new InvokersVisitor(this.writer);
+    const invokersVisitor = new InvokersVisitor(this.writer, this.resources);
     iface.accept(context, invokersVisitor);
   }
 }
@@ -134,6 +175,9 @@ export class ProviderVisitor extends ImportBaseVisitor {
         return false;
       },
       (context: Context): boolean => {
+        if (!context.interface) {
+          return true;
+        }
         return !isProvider(context) || noCode(context.operation);
       },
     );
@@ -146,21 +190,22 @@ export class ImportVisitor extends ImportBaseVisitor {
       writer,
       (context: Context): boolean => {
         const { namespace: ns } = context;
+        if (Object.keys(ns.functions).length > 0) {
+          return true;
+        }
         for (const name in ns.interfaces) {
           const iface = ns.interfaces[name];
           if (iface.annotation("service")) {
             return true;
           }
         }
-        for (const name in ns.functions) {
-          const iface = ns.functions[name];
-          if (iface.annotation("service")) {
-            return true;
-          }
-        }
+
         return false;
       },
       (context: Context): boolean => {
+        if (!context.interface) {
+          return false;
+        }
         return !isHandler(context);
       },
     );
@@ -170,12 +215,9 @@ export class ImportVisitor extends ImportBaseVisitor {
 class ProviderStructVisitor extends BaseVisitor {
   visitInterfaceBefore(context: Context): void {
     const { interface: iface } = context;
-    this.write(`type ${iface.name}Impl struct {\n`);
-  }
-
-  visitOperation(context: Context): void {
-    const { operation } = context;
-    this.write(`op${methodName(operation, operation.name)} uint32\n`);
+    this.write(`type ${iface.name}Client struct {
+      c *Client
+      instanceID uint64\n`);
   }
 
   visitInterfaceAfter(_context: Context): void {
@@ -186,19 +228,9 @@ class ProviderStructVisitor extends BaseVisitor {
 class ProviderNewVisitor extends BaseVisitor {
   visitInterfaceBefore(context: Context): void {
     const { interface: iface } = context;
-    this.write(`func New${iface.name}() *${iface.name}Impl {
-      return &${iface.name}Impl{\n`);
-  }
-
-  visitOperation(context: Context): void {
-    const { namespace: ns, interface: iface, operation } = context;
-    const $ = getImporter(context, IMPORTS);
-    const parts = getOperationParts(operation);
-    this.write(
-      `op${
-        methodName(operation, operation.name)
-      }: ${$.invoke}.Import${parts.type}("${ns.name}.${iface.name}", "${operation.name}"),\n`,
-    );
+    this.write(`func (c *Client) ${iface.name}() ${iface.name} {
+      return &${iface.name}Client{
+        c: c,\n`);
   }
 
   visitInterfaceAfter(_context: Context): void {

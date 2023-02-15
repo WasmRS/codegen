@@ -10,6 +10,7 @@ for dir in */; do
     echo "Generating code in $dir"
     mkdir -p "$dir/actual"
     cd "$dir/actual"
+    cp ../expected/go.* .
     apex generate ../apex.yaml
     cd ..
     echo "Checking $dir for diffs"

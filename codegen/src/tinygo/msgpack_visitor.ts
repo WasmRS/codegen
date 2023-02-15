@@ -19,7 +19,11 @@ import {
   convertOperationToType,
   convertUnionToType,
 } from "../deps/codegen/utils.ts";
-import { GoVisitor, StructVisitor } from "../deps/codegen/go.ts";
+import {
+  DefaultsVisitor,
+  GoVisitor,
+  StructVisitor,
+} from "../deps/codegen/go.ts";
 import { MsgPackDecoderVisitor } from "./msgpack_decoder_visitor.ts";
 import {
   MsgPackEncoderUnionVisitor,
@@ -42,6 +46,8 @@ export class MsgPackVisitor extends GoVisitor {
       const ctx = context.clone({ type: type });
       const struct = new StructVisitor(this.writer);
       type.accept(ctx, struct);
+      const defaults = new DefaultsVisitor(this.writer);
+      type.accept(ctx, defaults);
       const decoder = new MsgPackDecoderVisitor(this.writer);
       type.accept(ctx, decoder);
       const encoder = new MsgPackEncoderVisitor(this.writer);

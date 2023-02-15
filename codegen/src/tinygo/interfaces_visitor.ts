@@ -17,6 +17,7 @@ limitations under the License.
 import { Context, Visitor, Writer } from "../deps/core/model.ts";
 import { InterfacesVisitor as GoInterfacesVisitor } from "../deps/codegen/go.ts";
 import { InterfaceVisitor } from "./interface_visitor.ts";
+import { isHandler, isProvider } from "../deps/codegen/utils.ts";
 
 export class InterfacesVisitor extends GoInterfacesVisitor {
   constructor(writer: Writer) {
@@ -25,6 +26,17 @@ export class InterfacesVisitor extends GoInterfacesVisitor {
       new InterfaceVisitor(writer);
     this.dependencyVisitor = (writer: Writer): Visitor =>
       new InterfaceVisitor(writer);
+  }
+
+  visitInterfaceBefore(context: Context): void {
+    const { interface: iface } = context;
+    if (isProvider(context)) {
+      const visitor = this.dependencyVisitor(this.writer);
+      iface.accept(context, visitor);
+    } else if (isHandler(context)) {
+      const visitor = this.serviceVisitor(this.writer);
+      iface.accept(context, visitor);
+    }
   }
 
   visitContextBefore(context: Context): void {

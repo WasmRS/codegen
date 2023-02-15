@@ -1,7 +1,6 @@
 import {
   Context,
   Interface,
-  Kind,
   ObjectMap,
   Operation,
   Stream,

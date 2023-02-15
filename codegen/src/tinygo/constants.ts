@@ -31,10 +31,46 @@ export const primitiveTransformers = new Map<string, string>([
   ["bytes", "transform.Bytes"],
 ]);
 
+export const primitiveToBytes = new Map<string, string>([
+  ["bool", "BoolToBytes"],
+  ["string", "StringToBytes"],
+  ["datetime", "TimeToBytes"],
+  ["i8", "I8ToBytes"],
+  ["u8", "U8ToBytes"],
+  ["i16", "I16ToBytes"],
+  ["u16", "U16ToBytes"],
+  ["i32", "I32ToBytes"],
+  ["u32", "U32ToBytes"],
+  ["i64", "I64ToBytes"],
+  ["u64", "U64ToBytes"],
+  ["f32", "F32ToBytes"],
+  ["f64", "F64ToBytes"],
+  ["bytes", "BytesToBytes"],
+]);
+
+export const primitiveDecode = new Map<string, string>([
+  ["bool", "BoolDecode"],
+  ["string", "StringDecode"],
+  ["datetime", "TimeDecode"],
+  ["i8", "Int8Decode"],
+  ["u8", "Uint8Decode"],
+  ["i16", "Int16Decode"],
+  ["u16", "Uint16Decode"],
+  ["i32", "Int32Decode"],
+  ["u32", "Uint32Decode"],
+  ["i64", "Int64Decode"],
+  ["u64", "Uint64Decode"],
+  ["f32", "Float32Decode"],
+  ["f64", "Float64Decode"],
+  ["bytes", "BytesDecode"],
+]);
+
 export const IMPORTS = {
   context: "context",
+  errors: "errors",
   binary: "encoding/binary",
   guest: "github.com/nanobus/iota/go/transport/wasmrs/guest",
+  rsocket: "github.com/nanobus/iota/go/transport/rsocket",
   invoke: "github.com/nanobus/iota/go/invoke",
   msgpack: "github.com/nanobus/iota/go/msgpack",
   convert: "github.com/nanobus/iota/go/msgpack/convert",

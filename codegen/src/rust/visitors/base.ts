@@ -8,7 +8,7 @@ import {
   Type,
   Union,
   Writer,
-} from '../../deps/core/model.ts';
+} from "../../deps/core/model.ts";
 
 export type VisitorTypes = Alias | Type | Union | Enum | Interface;
 

@@ -3,6 +3,7 @@
 /testdata/*/actual/*
 
 # compiled output
+bundle.js
 dist
 tmp
 /out-tsc

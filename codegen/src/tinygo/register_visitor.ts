@@ -15,7 +15,11 @@ limitations under the License.
 */
 
 import { Context, Kind, Stream } from "../deps/core/model.ts";
-import { getImporter, GoVisitor, setExpandStreamPattern } from "../deps/codegen/go.ts";
+import {
+  getImporter,
+  GoVisitor,
+  setExpandStreamPattern,
+} from "../deps/codegen/go.ts";
 import {
   capitalize,
   isHandler,
@@ -33,7 +37,6 @@ export class RegisterVisitor extends GoVisitor {
     if (!isHandler(context) || noCode(context.operation)) {
       return;
     }
-
     const { interface: iface } = context;
 
     this.write(`func Register${iface.name}(svc ${iface.name}) {\n`);
@@ -45,6 +48,7 @@ export class RegisterVisitor extends GoVisitor {
     }
 
     const { namespace: ns, interface: iface, operation } = context;
+
     const $ = getImporter(context, IMPORTS);
     const wrapperName = `${uncapitalize(iface.name)}${
       capitalize(

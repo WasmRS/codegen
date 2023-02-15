@@ -3,18 +3,19 @@ package main
 import (
 	"github.com/nanobus/iota/go/transport/wasmrs/guest"
 
-	"github.com/nanobus/examples/urlshortener/pkg/urlshortener"
+	"github.com/nanobus/iota/testing/iotatest/pkg/iotatest"
 )
 
 func main() {
-	urlshortener.Initialize(guest.HostInvoker)
-
 	// Create providers
-	repositoryProvider := urlshortener.NewRepository()
+	deps := iotatest.GetDependencies(guest.HostInvoker)
 
 	// Create services
-	shortenerService := urlshortener.NewShortener(repositoryProvider)
+	myStreamerService := iotatest.NewMyStreamer(deps)
+	myServiceService := iotatest.NewMyService(deps)
 
 	// Register services
-	urlshortener.RegisterShortener(shortenerService)
+	iotatest.RegisterSomeCalc(iotatest.SomeCalc)
+	iotatest.RegisterMyStreamer(myStreamerService)
+	iotatest.RegisterMyService(myServiceService)
 }

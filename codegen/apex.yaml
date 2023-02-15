@@ -1,0 +1,11 @@
+tasks:
+  build:
+    cmds:
+      - deno bundle src/mod.ts bundle.js
+
+  test:
+    cmds:
+      - deno fmt --check src/ test/
+      - deno lint src/
+      - deno check --unstable src/mod.ts
+      - deno test --allow-env test/utils.test.ts

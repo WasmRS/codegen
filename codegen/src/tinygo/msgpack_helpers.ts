@@ -67,15 +67,7 @@ export function msgpackRead(
   const imports = getImports(context);
   const $ = getImporter(context, IMPORTS);
   const tr = translateAlias(context);
-  const returnPrefix = defaultVal == "" ? "" : `${defaultVal}, `;
   let prefix = "return ";
-  const assign = variable == "item" ||
-      variable == "key" ||
-      variable == "value" ||
-      variable == "ret" ||
-      variable == "request"
-    ? ":="
-    : "=";
   if (variable != "") {
     if (
       variable == "item" ||
@@ -103,7 +95,7 @@ export function msgpackRead(
       }
     }
   }
-  const passedType = t;
+
   if (t.kind == Kind.Alias) {
     const aliases = (context.config.aliases as { [key: string]: Import }) || {};
     const a = t as Alias;
@@ -134,6 +126,7 @@ export function msgpackRead(
     }
     t = a.type;
   }
+
   switch (t.kind) {
     case Kind.Union:
     case Kind.Type:
@@ -165,128 +158,72 @@ export function msgpackRead(
       return `${prefix}${decodeFn}\n`;
     }
     case Kind.Map: {
-      let mapCode = `mapSize, err := decoder.ReadMapSize()
-      if err != nil {
-        return ${returnPrefix}err
-      }\n`;
-      if (variable == "ret") {
-        mapCode += "ret :=";
-      } else {
-        mapCode += `${variable} ${assign} `;
-      }
-      mapCode += `make(${
-        expandType(
-          passedType,
-          undefined,
-          true,
-          tr,
+      const m = t as Map;
+      const expandedKey = expandType(
+        m.keyType,
+        undefined,
+        true,
+        tr,
+      );
+      const expandedVal = expandType(
+        m.valueType,
+        undefined,
+        true,
+        tr,
+      );
+      return `${prefix}${$.msgpack}.ReadMap(decoder, func(decoder ${$.msgpack}.Reader) (${expandedKey}, error) { ${
+        msgpackRead(
+          context,
+          typeInstRef,
+          "",
+          false,
+          defaultVal,
+          m.keyType,
+          false,
         )
-      }, mapSize)\n`;
-      mapCode += `for mapSize > 0 {
-        mapSize--\n`;
-      mapCode += msgpackRead(
-        context,
-        typeInstRef,
-        "key",
-        true,
-        defaultVal,
-        (t as Map).keyType,
-        false,
-      );
-      if (!mapCode.endsWith(`\n`)) {
-        mapCode += `\n`;
-      }
-      mapCode += `if err != nil {
-          return ${returnPrefix}err
-        }\n`;
-      mapCode += msgpackRead(
-        context,
-        typeInstRef,
-        "value",
-        true,
-        defaultVal,
-        (t as Map).valueType,
-        false,
-      );
-      if (!mapCode.endsWith(`\n`)) {
-        mapCode += `\n`;
-      }
-      mapCode += `if err != nil {
-          return ${returnPrefix}err
-        }\n`;
-      mapCode += `${variable}[key] = value
-      }\n`;
-      return mapCode;
+      } }, func(decoder ${$.msgpack}.Reader) (${expandedVal}, error) { ${
+        msgpackRead(
+          context,
+          typeInstRef,
+          "",
+          false,
+          defaultVal,
+          m.valueType,
+          false,
+        )
+      } })\n`;
     }
     case Kind.List: {
-      let listCode = `listSize, err := decoder.ReadArraySize()
-      if err != nil {
-        return ${returnPrefix}err
-      }\n`;
-      if (variable == "ret") {
-        listCode += "ret :=";
-      } else {
-        listCode += `${variable} ${assign} `;
-      }
-      listCode += `make(${
-        expandType(
-          passedType,
-          undefined,
-          true,
-          tr,
-        )
-      }, 0, listSize)\n`;
-      listCode += `for listSize > 0 {
-        listSize--
-        var nonNilItem ${(t as List).type.kind == Kind.Optional ? "*" : ""}${
-        expandType((t as List).type, undefined, false, tr)
-      }\n`;
-      listCode += msgpackRead(
-        context,
-        typeInstRef,
-        "nonNilItem",
+      const l = t as List;
+      const expanded = expandType(
+        l.type,
+        undefined,
         true,
-        defaultVal,
-        (t as List).type,
-        false,
+        tr,
       );
-      if (!listCode.endsWith(`\n`)) {
-        listCode += `\n`;
-      }
-      listCode += `if err != nil {
-          return ${returnPrefix}err
-        }\n`;
-      listCode += `${variable} = append(${variable}, nonNilItem)
-      }\n`;
-      return listCode;
+      return `${prefix}${$.msgpack}.ReadSlice(decoder, func(decoder ${$.msgpack}.Reader) (${expanded}, error) { ${
+        msgpackRead(
+          context,
+          typeInstRef,
+          "",
+          false,
+          defaultVal,
+          l.type,
+          false,
+        )
+      } })\n`;
     }
     case Kind.Optional: {
       const optNode = t as Optional;
-      optNode.type;
-      switch (optNode.type.kind) {
-        case Kind.List:
-        case Kind.Map:
-          return msgpackRead(
-            context,
-            typeInstRef,
-            variable,
-            false,
-            defaultVal,
-            optNode.type,
-            true,
-          );
-      }
-      let optCode = "";
-      optCode += msgpackRead(
+      return msgpackRead(
         context,
         typeInstRef,
         variable,
-        true,
+        errorHandling,
         defaultVal,
         optNode.type,
         true,
       );
-      return optCode;
     }
     default:
       return "unknown\n";

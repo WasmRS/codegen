@@ -1,7 +1,7 @@
 import {
   Configuration,
   TaskDefinition,
-} from "https://deno.land/x/apex_cli@v0.0.15/src/config.ts";
+} from "https://deno.land/x/apex_cli@v0.0.18/src/config.ts";
 import * as apex from "../deps/core/mod.ts";
 import * as rust from "../deps/codegen/rust.ts";
 import { Context, Operation } from "../deps/core/model.ts";
@@ -37,9 +37,12 @@ export default function (
   config.config.name ||= module;
   try {
     const cargoToml = Deno.readTextFileSync("./Cargo.toml");
+    // deno-lint-ignore no-explicit-any
     const cargo = parse(cargoToml) as any;
     config.config.name ||= cargo.package.name;
-  } catch {}
+  } catch {
+    // Ignore
+  }
   if (!config.config.name) {
     throw new Error(
       "No name provided in config, and no Cargo.toml found with a name",

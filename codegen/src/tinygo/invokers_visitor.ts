@@ -18,17 +18,22 @@ import {
   Alias,
   Context,
   Enum,
+  Interface,
   Kind,
   List,
+  Map,
   Named,
   Primitive,
   Stream,
+  Writer,
 } from "../deps/core/model.ts";
 import {
   expandType,
   fieldName,
   getImporter,
+  getImports,
   GoVisitor,
+  Import,
   mapParam,
   methodName,
   parameterName,
@@ -41,10 +46,23 @@ import {
   isVoid,
   operationArgsType,
 } from "../deps/codegen/utils.ts";
+import { msgpackRead, msgpackWrite } from "./msgpack_helpers.ts";
 import { getOperationParts } from "./utilities.ts";
-import { IMPORTS, primitiveTransformers } from "./constants.ts";
+import {
+  IMPORTS,
+  primitiveDecode,
+  primitiveToBytes,
+  primitiveTransformers,
+} from "./constants.ts";
 
 export class InvokersVisitor extends GoVisitor {
+  private resources: Set<string>;
+
+  constructor(writer: Writer, resources: Set<string>) {
+    super(writer);
+    this.resources = resources;
+  }
+
   visitOperation(context: Context): void {
     this.doHandler(context);
   }
@@ -73,7 +91,8 @@ export class InvokersVisitor extends GoVisitor {
       } else {
         rxWrapper = `${$.mono}.Mono`;
       }
-      this.write(` ${rxWrapper}[${expandType(t, undefined, true, translate)}]`);
+      const expanded = expandType(t, undefined, true, translate);
+      this.write(` ${rxWrapper}[${expanded}]`);
     } else {
       this.write(` ${$.mono}.Void`);
     }
@@ -83,10 +102,20 @@ export class InvokersVisitor extends GoVisitor {
     const tr = translateAlias(context);
     const { interface: iface, operation } = context;
     const $ = getImporter(context, IMPORTS);
+    const imports = getImports(context);
+
+    const { type, unaryIn, parameters, streamIn, returns, returnPackage } =
+      getOperationParts(operation);
+
+    const returnType = !returns || isVoid(returns)
+      ? "struct{}"
+      : returns.kind == Kind.Interface
+      ? (returns as Interface).name
+      : expandType(returns, undefined, false, tr);
 
     let receiver = "";
     if (iface) {
-      const structName = iface.name + "Impl";
+      const structName = iface.name + "Client";
       receiver = structName.substring(0, 1).toLowerCase();
       this.write(
         `func (${receiver} *${structName}) ${
@@ -98,7 +127,7 @@ export class InvokersVisitor extends GoVisitor {
       );
     } else {
       this.write(
-        `func ${
+        `func (c *Client) ${
           methodName(operation, operation.name)
         }(ctx ${$.context}.Context`,
       );
@@ -110,13 +139,6 @@ export class InvokersVisitor extends GoVisitor {
     this.write(`)`);
     this.visitOperationReturn(context);
     this.write(` {\n`);
-
-    const { type, unaryIn, parameters, streamIn, returns, returnPackage } =
-      getOperationParts(operation);
-
-    const returnType = !returns || isVoid(returns)
-      ? "struct{}"
-      : expandType(returns, undefined, false, tr);
 
     if (unaryIn) {
       if (unaryIn.type.kind == Kind.Enum) {
@@ -133,21 +155,108 @@ export class InvokersVisitor extends GoVisitor {
         }\n`,
           );
       } else if (unaryIn.type.kind == Kind.Alias) {
-        // const a = unaryIn.type as Alias;
-        // const primitiveExpanded = expandType(a.type, undefined, false, tr);
-        // const unaryParamExpanded = expandType(
-        //   unaryIn.type,
-        //   undefined,
-        //   false,
-        //   tr
-        // );
-        // this.write(`aliasVal, err := transform.${capitalize(
-        //   primitiveExpanded
-        // )}.Decode(p)
-        //   if err != nil {
-        //     return ${error}[payload.Payload](err)
-        //   }
-        //   request := ${unaryParamExpanded}(aliasVal)\n`);
+        const a = unaryIn.type as Alias;
+        const aliases = (context.config.aliases as { [key: string]: Import }) ||
+          {};
+        const imp = aliases[a.name];
+        if (imp && imp.format) {
+          if (imp.import) {
+            imports.thirdparty(imp.import);
+          }
+          this.write(
+            `payloadData, err := ${$.msgpack}.${
+              primitiveToBytes.get("string")
+            }(${
+              parameterName(
+                unaryIn,
+                unaryIn.name,
+              )
+            }.${imp.format}())
+          if err != nil {
+            return ${returnPackage}.Error[${returnType}](err)
+          }\n`,
+          );
+        } else {
+          const primitiveExpanded = expandType(a.type, undefined, false, tr);
+          this.write(
+            `payloadData, err := ${$.msgpack}.${
+              primitiveToBytes.get(primitiveExpanded)
+            }(${primitiveExpanded}(${
+              parameterName(
+                unaryIn,
+                unaryIn.name,
+              )
+            }))
+          if err != nil {
+            return ${returnPackage}.Error[${returnType}](err)
+          }\n`,
+          );
+        }
+      } else if (unaryIn.type.kind == Kind.List) {
+        const l = unaryIn.type as List;
+        const expanded = expandType(l.type, undefined, false, tr);
+        this.write(
+          `payloadData, err := ${$.msgpack}.SliceToBytes(${
+            parameterName(
+              unaryIn,
+              unaryIn.name,
+            )
+          }, func(writer ${$.msgpack}.Writer, val ${expanded}) {
+            ${
+            msgpackWrite(
+              context,
+              "writer",
+              false,
+              "",
+              "",
+              "val",
+              l.type,
+              false,
+            )
+          } })
+        if err != nil {
+          return ${returnPackage}.Error[${returnType}](err)
+        }\n`,
+        );
+      } else if (unaryIn.type.kind == Kind.Map) {
+        const m = unaryIn.type as Map;
+        const expandedKey = expandType(m.keyType, undefined, false, tr);
+        const expandedVal = expandType(m.valueType, undefined, false, tr);
+        this.write(
+          `payloadData, err := ${$.msgpack}.MapToBytes(${
+            parameterName(
+              unaryIn,
+              unaryIn.name,
+            )
+          }, func(writer ${$.msgpack}.Writer, val ${expandedKey}) {
+            ${
+            msgpackWrite(
+              context,
+              "writer",
+              false,
+              "",
+              "",
+              "val",
+              m.keyType,
+              false,
+            )
+          } }, func(writer ${$.msgpack}.Writer, val ${expandedVal}) {
+            ${
+            msgpackWrite(
+              context,
+              "writer",
+              false,
+              "",
+              "",
+              "val",
+              m.valueType,
+              false,
+            )
+          } })
+        if err != nil {
+          return ${returnPackage}.Error[${returnType}](err)
+        }\n`,
+        );
       } else if (isObject(unaryIn.type)) {
         this.write(`payloadData, err := ${$.msgpack}.ToBytes(${
           parameterName(
@@ -161,10 +270,10 @@ export class InvokersVisitor extends GoVisitor {
       } else if (isPrimitive(unaryIn.type)) {
         const p = unaryIn.type as Primitive;
         this.write(`payloadData, err := ${$.msgpack}.${
-          capitalize(
+          primitiveToBytes.get(
             p.name,
           )
-        }ToBytes(${parameterName(unaryIn, unaryIn.name)})
+        }(${parameterName(unaryIn, unaryIn.name)})
         if err != nil {
           return ${returnPackage}.Error[${returnType}](err)
         }\n`);
@@ -174,8 +283,9 @@ export class InvokersVisitor extends GoVisitor {
         const argsName = operationArgsType(iface, operation);
         this.write(`request := ${argsName} {\n`);
         parameters.forEach((p) => {
+          const ref = isObject(p.type, false) ? "*" : "";
           this.write(
-            `\t${fieldName(p, p.name)}: ${parameterName(p, p.name)},\n`,
+            `\t${fieldName(p, p.name)}: ${ref}${parameterName(p, p.name)},\n`,
           );
         });
         this.write(`}
@@ -188,32 +298,57 @@ export class InvokersVisitor extends GoVisitor {
       }
     }
     const opVar = iface
-      ? `${receiver}.op${methodName(operation, operation.name)}`
-      : `_op${methodName(operation, operation.name)}`;
+      ? `${receiver}.c._op${iface.name}${methodName(operation, operation.name)}`
+      : `c._op${methodName(operation, operation.name)}`;
+    const callerVar = iface ? `${receiver}.c.caller` : `c.caller`;
     this.write(
-      `var metadata [8]byte
+      `var metadata [16]byte
       stream, ok := ${$.proxy}.FromContext(ctx)
       ${$.binary}.BigEndian.PutUint32(metadata[0:4], ${opVar})
       if ok {
         ${$.binary}.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
-      }
-      pl := ${$.payload}.New(payloadData, metadata[:])\n`,
+      }\n`,
     );
+    if (iface && this.resources.has(iface.name)) {
+      this.write(
+        `binary.BigEndian.PutUint64(metadata[8:], ${receiver}.instanceID)\n`,
+      );
+    }
+    this.write(`pl := ${$.payload}.New(payloadData, metadata[:])\n`);
     if (streamIn) {
       let transformFn = "";
       switch (streamIn.type.kind) {
         case Kind.Primitive: {
           const p = streamIn.type as Primitive;
-          transformFn = `${$.transform}.${capitalize(p.name)}.Encode`;
+          imports.thirdparty(IMPORTS.transform);
+          transformFn = `${
+            primitiveTransformers.get(
+              p.name,
+            )
+          }.Encode`;
           break;
         }
         case Kind.Alias: {
           const a = streamIn.type as Alias;
           if (a.type.kind == Kind.Primitive) {
             const p = a.type as Primitive;
-            transformFn = `${$.transform}.${
-              capitalize(p.name)
-            }Encode[${a.name}]`;
+            const aliases =
+              (context.config.aliases as { [key: string]: Import }) ||
+              {};
+            const imp = aliases[a.name];
+            if (imp && imp.parse) {
+              if (imp.import) {
+                imports.thirdparty(imp.import);
+              }
+              transformFn =
+                `${$.transform}.ToStringEncode(func (val ${imp.type}) string {
+                return val.${imp.format}()
+              })`;
+            } else {
+              transformFn = `${$.transform}.${
+                capitalize(p.name)
+              }Encode[${a.name}]`;
+            }
           } else {
             const expanded = expandType(a.type, undefined, undefined, tr);
             transformFn = `func(value ${a.name}) (payload.Payload, error) {
@@ -227,6 +362,57 @@ export class InvokersVisitor extends GoVisitor {
           transformFn = `${$.transform}.Int32Encode[${e.name}]`;
           break;
         }
+        case Kind.List: {
+          const l = streamIn.type as List;
+          const expanded = expandType(l.type, undefined, undefined, tr);
+          transformFn =
+            `${$.transform}.SliceEncode(func(writer ${$.msgpack}.Writer, val ${expanded}) {
+          ${
+              msgpackWrite(
+                context,
+                "writer",
+                false,
+                "",
+                "",
+                "val",
+                l.type,
+                false,
+              )
+            } })`;
+          break;
+        }
+        case Kind.Map: {
+          const m = streamIn.type as Map;
+          const expandedKey = expandType(m.keyType, undefined, undefined, tr);
+          const expandedVal = expandType(m.valueType, undefined, undefined, tr);
+          transformFn =
+            `${$.transform}.MapEncode(func(writer ${$.msgpack}.Writer, key ${expandedKey}) {
+          ${
+              msgpackWrite(
+                context,
+                "writer",
+                false,
+                "",
+                "",
+                "key",
+                m.keyType,
+                false,
+              )
+            } }, func(writer ${$.msgpack}.Writer, val ${expandedVal}) {
+          ${
+              msgpackWrite(
+                context,
+                "writer",
+                false,
+                "",
+                "",
+                "val",
+                m.valueType,
+                false,
+              )
+            } })`;
+          break;
+        }
         case Kind.Type:
         case Kind.Union: {
           const t = streamIn.type as Named;
@@ -234,41 +420,70 @@ export class InvokersVisitor extends GoVisitor {
           break;
         }
         default: {
-          console.log(streamIn.type.kind);
+          console.error(streamIn.type.kind);
         }
       }
       const inMap = `${$.flux}.Map(${streamIn.parameter.name}, ${transformFn})`;
       if (returns && operation.type.kind != Kind.Stream && !isVoid(returns)) {
-        this.write(`futureStream := gCaller.${type}(ctx, pl, ${inMap})\n`);
-        this.write("future := transform.FluxToMono(futureStream)\n");
+        this.write(`futureStream := ${callerVar}.${type}(ctx, pl, ${inMap})\n`);
+        this.write(`future := ${$.transform}.FluxToMono(futureStream)\n`);
       } else {
-        this.write(`future := gCaller.${type}(ctx, pl, ${inMap})\n`);
+        this.write(`future := ${callerVar}.${type}(ctx, pl, ${inMap})\n`);
       }
     } else {
-      this.write(`future := gCaller.${type}(ctx, pl)\n`);
+      this.write(`future := ${callerVar}.${type}(ctx, pl)\n`);
     }
     if (streamIn && (!returns || isVoid(returns))) {
-      this.write("return transform.FluxToVoid(future)\n");
+      this.write(`return ${$.transform}.FluxToVoid(future)\n`);
     } else if (returns.kind == Kind.Alias) {
       const a = returns as Alias;
       if (a.type.kind == Kind.Primitive) {
         const p = a.type as Primitive;
-        this.write(
-          `return ${returnPackage}.Map(future, ${$.transform}.${
-            capitalize(
-              p.name,
-            )
-          }Decode[${a.name}])\n`,
-        );
+        const aliases = (context.config.aliases as { [key: string]: Import }) ||
+          {};
+        const imp = aliases[a.name];
+        if (imp && imp.parse) {
+          if (imp.import) {
+            imports.thirdparty(imp.import);
+          }
+          this.write(
+            `return ${returnPackage}.Map(future, ${$.transform}.ToStringDecode(func (val string) (${imp.type}, error) {
+                  return ${imp.parse}(val)
+                }))`,
+          );
+        } else {
+          imports.thirdparty(IMPORTS.transform);
+          this.write(
+            `return ${returnPackage}.Map(future, ${$.transform}.${
+              primitiveDecode.get(
+                p.name,
+              )
+            }[${a.name}])\n`,
+          );
+        }
       } else {
         const expanded = expandType(a.type, undefined, undefined, tr);
         this.write(
-          `return ${returnPackage}.Map(future, func(raw payload.Payload) (val ${a.name}, err error) {
+          `return ${returnPackage}.Map(future, func(raw ${$.payload}.Payload) (val ${a.name}, err error) {
             err = ${$.transform}.CodecDecode(raw, (*${expanded})(&val))
             return val, err
           })\n`,
         );
       }
+    } else if (returns.kind == Kind.Interface) {
+      const c = iface ? `${receiver}.c` : `c`;
+      this.write(
+        `return ${$.mono}.Map(future, func(p ${$.payload}.Payload) (${returnType}, error) {
+        instId, err := ${$.transform}.Uint64.Decode(p)
+        if err != nil {
+          return nil, err
+        }
+        return &${returnType}Client{
+          c:          ${c},
+          instanceID: instId,
+        }, nil
+      })\n`,
+      );
     } else if (returns.kind == Kind.Enum) {
       const e = returns as Enum;
       this.write(
@@ -280,10 +495,49 @@ export class InvokersVisitor extends GoVisitor {
       this.write(`return ${returnPackage}.Map(future, ${transform}.Decode)\n`);
     } else if (returns.kind == Kind.List) {
       const l = returns as List;
-      const expanded = expandType(l.type, undefined, undefined, tr);
+      const expanded = expandType(l.type, undefined, false, tr);
       this.write(
-        `return ${returnPackage}.Map(future, ${$.transform}.SliceDecode[${expanded}])\n`,
+        `return ${returnPackage}.Map(future, ${$.transform}.SliceDecode(func(decoder ${$.msgpack}.Reader) (${expanded}, error) {
+          ${
+          msgpackRead(
+            context,
+            false,
+            "",
+            false,
+            "",
+            l.type,
+            false,
+          )
+        }}))\n`,
       );
+    } else if (returns.kind == Kind.Map) {
+      const m = returns as Map;
+      const expandedKey = expandType(m.keyType, undefined, false, tr);
+      const expandedVal = expandType(m.valueType, undefined, false, tr);
+      this.write(`return ${returnPackage}.Map(future, ${$.transform}.MapDecode(
+              func(decoder ${$.msgpack}.Reader) (${expandedKey}, error) {
+              ${
+        msgpackRead(
+          context,
+          false,
+          "",
+          false,
+          "",
+          m.keyType,
+          false,
+        )
+      }}, func(decoder ${$.msgpack}.Reader) (${expandedVal}, error) {
+            ${
+        msgpackRead(
+          context,
+          false,
+          "",
+          false,
+          "",
+          m.valueType,
+          false,
+        )
+      }}))`);
     } else if (!returns || isVoid(returns)) {
       this.write(
         `return ${returnPackage}.Map(future, ${$.transform}.Void.Decode)\n`,
