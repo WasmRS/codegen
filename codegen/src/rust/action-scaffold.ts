@@ -15,19 +15,19 @@ export default class DefaultVisitor extends model.BaseVisitor {
     use crate::actions::${context.config.interface}_service::${context.config.action}::*;
 
     `);
-    if (context.config.variant === ActionKind.RequestChannel) {
+    if (variant === ActionKind.RequestChannel) {
       this.write(`
-      pub(crate) async fn task(mut input:Inputs) -> Result<Outputs, crate::Error> {
+      pub(crate) async fn task(input: Input) -> Result<Output, crate::Error> {
         todo!("Add implementation");
       }`);
-    } else if (context.config.variant === ActionKind.RequestStream) {
+    } else if (variant === ActionKind.RequestStream) {
       this.write(`
-      pub(crate) async fn task(input: Inputs) -> Result<Outputs, crate::Error> {
+      pub(crate) async fn task(input: Input) -> Result<Output, crate::Error> {
         todo!("Add implementation");
       }`);
     } else {
       this.write(`
-      pub(crate) async fn task(input: Inputs) -> Result<Outputs, crate::Error> {
+      pub(crate) async fn task(input: Input) -> Result<Output, crate::Error> {
         todo!("Add implementation");
       }`);
     }

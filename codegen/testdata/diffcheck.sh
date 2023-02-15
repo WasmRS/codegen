@@ -10,18 +10,17 @@ for dir in */; do
     echo "Generating code in $dir"
     mkdir -p "$dir/actual"
     cd "$dir/actual"
-    cp ../expected/go.* .
     apex generate ../apex.yaml
     cd ..
     echo "Checking $dir for diffs"
     diff -r ./expected ./actual
-  ) ; then
+  ); then
     FAILED=true
   fi
   echo "------------------------------------"
 done
 
-if [ "$FAILED" = true ] ; then
+if [ "$FAILED" = true ]; then
   echo "Exiting with code -1 due to differences"
   exit -1
 fi

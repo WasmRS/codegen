@@ -1,5 +1,5 @@
 import { noCase } from "../../deps/codegen/utils.ts";
-import { Kind, Operation, Parameter } from "../../deps/core/model.ts";
+import { AnyType, Kind, Operation, Parameter } from "../../deps/core/model.ts";
 export * as types from "./types.ts";
 export * as convert from "./conversions.ts";
 
@@ -83,8 +83,12 @@ export class Actions {
   }
 }
 
-export function stream(p: Parameter): boolean {
-  return p.type.kind === Kind.Stream;
+export function stream(p: Parameter | AnyType): boolean {
+  if (p.kind === Kind.Parameter) {
+    return (p as Parameter).type.kind === Kind.Stream;
+  } else {
+    return p.kind === Kind.Stream;
+  }
 }
 
 export function nonStream(p: Parameter): boolean {
