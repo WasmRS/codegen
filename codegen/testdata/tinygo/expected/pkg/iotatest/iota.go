@@ -2204,6 +2204,1049 @@ func (o *MyServiceFuncMapArgs) Encode(encoder msgpack.Writer) error {
 	return nil
 }
 
+type RepositoryRequestStreamArgsI64Args struct {
+	Value int64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsI64Args returns a
+// `RepositoryRequestStreamArgsI64Args` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsI64Args() RepositoryRequestStreamArgsI64Args {
+	return RepositoryRequestStreamArgsI64Args{}
+}
+
+func (o *RepositoryRequestStreamArgsI64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadInt64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsI64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsF64Args struct {
+	Value float64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsF64Args returns a
+// `RepositoryRequestStreamArgsF64Args` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsF64Args() RepositoryRequestStreamArgsF64Args {
+	return RepositoryRequestStreamArgsF64Args{}
+}
+
+func (o *RepositoryRequestStreamArgsF64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadFloat64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsF64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteFloat64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsTypeArgs struct {
+	Value MyType `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsTypeArgs returns a
+// `RepositoryRequestStreamArgsTypeArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsTypeArgs() RepositoryRequestStreamArgsTypeArgs {
+	return RepositoryRequestStreamArgsTypeArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsTypeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			err = o.Value.Decode(decoder)
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsTypeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	o.Value.Encode(encoder)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsEnumArgs struct {
+	Value MyEnum `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsEnumArgs returns a
+// `RepositoryRequestStreamArgsEnumArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsEnumArgs() RepositoryRequestStreamArgsEnumArgs {
+	return RepositoryRequestStreamArgsEnumArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsEnumArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Numeric[MyEnum](decoder.ReadInt32())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsEnumArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt32(int32(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsUUIDArgs struct {
+	Value uuid.UUID `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsUUIDArgs returns a
+// `RepositoryRequestStreamArgsUUIDArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsUUIDArgs() RepositoryRequestStreamArgsUUIDArgs {
+	return RepositoryRequestStreamArgsUUIDArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsUUIDArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Parse(uuid.Parse)(decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsUUIDArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value.String())
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsAliasArgs struct {
+	Value MyAlias `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsAliasArgs returns a
+// `RepositoryRequestStreamArgsAliasArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsAliasArgs() RepositoryRequestStreamArgsAliasArgs {
+	return RepositoryRequestStreamArgsAliasArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsAliasArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.String[MyAlias](decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsAliasArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(string(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsStringArgs struct {
+	Value string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsStringArgs returns a
+// `RepositoryRequestStreamArgsStringArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestStreamArgsStringArgs() RepositoryRequestStreamArgsStringArgs {
+	return RepositoryRequestStreamArgsStringArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsStringArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadString()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsStringArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsBoolArgs struct {
+	Value bool `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsBoolArgs returns a
+// `RepositoryRequestStreamArgsBoolArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsBoolArgs() RepositoryRequestStreamArgsBoolArgs {
+	return RepositoryRequestStreamArgsBoolArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsBoolArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadBool()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsBoolArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteBool(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsDatetimeArgs struct {
+	Value time.Time `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsDatetimeArgs returns a
+// `RepositoryRequestStreamArgsDatetimeArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestStreamArgsDatetimeArgs() RepositoryRequestStreamArgsDatetimeArgs {
+	return RepositoryRequestStreamArgsDatetimeArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsDatetimeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadTime()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsDatetimeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteTime(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsListArgs struct {
+	Value []string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsListArgs returns a
+// `RepositoryRequestStreamArgsListArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsListArgs() RepositoryRequestStreamArgsListArgs {
+	return RepositoryRequestStreamArgsListArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsListArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadSlice(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsListArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteArraySize(uint32(len(o.Value)))
+	for _, v := range o.Value {
+		encoder.WriteString(v)
+	}
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsMapArgs struct {
+	Value map[string]string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsMapArgs returns a
+// `RepositoryRequestStreamArgsMapArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsMapArgs() RepositoryRequestStreamArgsMapArgs {
+	return RepositoryRequestStreamArgsMapArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsMapArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadMap(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			}, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsMapArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteMapSize(uint32(len(o.Value)))
+	if o.Value != nil { // TinyGo bug: ranging over nil maps panics.
+		for k, v := range o.Value {
+			encoder.WriteString(k)
+			encoder.WriteString(v)
+		}
+	}
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsI64Args struct {
+	Value int64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsI64Args returns a
+// `RepositoryRequestChannelArgsI64Args` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsI64Args() RepositoryRequestChannelArgsI64Args {
+	return RepositoryRequestChannelArgsI64Args{}
+}
+
+func (o *RepositoryRequestChannelArgsI64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadInt64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsI64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsF64Args struct {
+	Value float64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsF64Args returns a
+// `RepositoryRequestChannelArgsF64Args` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsF64Args() RepositoryRequestChannelArgsF64Args {
+	return RepositoryRequestChannelArgsF64Args{}
+}
+
+func (o *RepositoryRequestChannelArgsF64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadFloat64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsF64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteFloat64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsTypeArgs struct {
+	Value MyType `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsTypeArgs returns a
+// `RepositoryRequestChannelArgsTypeArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsTypeArgs() RepositoryRequestChannelArgsTypeArgs {
+	return RepositoryRequestChannelArgsTypeArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsTypeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			err = o.Value.Decode(decoder)
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsTypeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	o.Value.Encode(encoder)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsEnumArgs struct {
+	Value MyEnum `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsEnumArgs returns a
+// `RepositoryRequestChannelArgsEnumArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsEnumArgs() RepositoryRequestChannelArgsEnumArgs {
+	return RepositoryRequestChannelArgsEnumArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsEnumArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Numeric[MyEnum](decoder.ReadInt32())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsEnumArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt32(int32(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsAliasArgs struct {
+	Value uuid.UUID `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsAliasArgs returns a
+// `RepositoryRequestChannelArgsAliasArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsAliasArgs() RepositoryRequestChannelArgsAliasArgs {
+	return RepositoryRequestChannelArgsAliasArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsAliasArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Parse(uuid.Parse)(decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsAliasArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value.String())
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsStringArgs struct {
+	Value string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsStringArgs returns a
+// `RepositoryRequestChannelArgsStringArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsStringArgs() RepositoryRequestChannelArgsStringArgs {
+	return RepositoryRequestChannelArgsStringArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsStringArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadString()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsStringArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsBoolArgs struct {
+	Value bool `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsBoolArgs returns a
+// `RepositoryRequestChannelArgsBoolArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsBoolArgs() RepositoryRequestChannelArgsBoolArgs {
+	return RepositoryRequestChannelArgsBoolArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsBoolArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadBool()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsBoolArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteBool(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsDatetimeArgs struct {
+	Value time.Time `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsDatetimeArgs returns a
+// `RepositoryRequestChannelArgsDatetimeArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsDatetimeArgs() RepositoryRequestChannelArgsDatetimeArgs {
+	return RepositoryRequestChannelArgsDatetimeArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsDatetimeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadTime()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsDatetimeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteTime(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsListArgs struct {
+	Value []string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsListArgs returns a
+// `RepositoryRequestChannelArgsListArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsListArgs() RepositoryRequestChannelArgsListArgs {
+	return RepositoryRequestChannelArgsListArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsListArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadSlice(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsListArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteArraySize(uint32(len(o.Value)))
+	for _, v := range o.Value {
+		encoder.WriteString(v)
+	}
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsMapArgs struct {
+	Value map[string]string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsMapArgs returns a
+// `RepositoryRequestChannelArgsMapArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsMapArgs() RepositoryRequestChannelArgsMapArgs {
+	return RepositoryRequestChannelArgsMapArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsMapArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadMap(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			}, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsMapArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteMapSize(uint32(len(o.Value)))
+	if o.Value != nil { // TinyGo bug: ranging over nil maps panics.
+		for k, v := range o.Value {
+			encoder.WriteString(k)
+			encoder.WriteString(v)
+		}
+	}
+
+	return nil
+}
+
 func (o *MyType) Decode(decoder msgpack.Reader) error {
 	numFields, err := decoder.ReadMapSize()
 	if err != nil {
@@ -3571,14 +4614,100 @@ type Dependencies struct {
 }
 
 type Client struct {
-	caller               invoke.Caller
-	_opRepositoryGetData uint32
+	caller                                     invoke.Caller
+	_opRepositoryRequestStreamI64              uint32
+	_opRepositoryRequestStreamF64              uint32
+	_opRepositoryRequestStreamType             uint32
+	_opRepositoryRequestStreamEnum             uint32
+	_opRepositoryRequestStreamUUID             uint32
+	_opRepositoryRequestStreamAlias            uint32
+	_opRepositoryRequestStreamString           uint32
+	_opRepositoryRequestStreamBool             uint32
+	_opRepositoryRequestStreamDatetime         uint32
+	_opRepositoryRequestStreamList             uint32
+	_opRepositoryRequestStreamMap              uint32
+	_opRepositoryRequestStreamArgsI64          uint32
+	_opRepositoryRequestStreamArgsF64          uint32
+	_opRepositoryRequestStreamArgsType         uint32
+	_opRepositoryRequestStreamArgsEnum         uint32
+	_opRepositoryRequestStreamArgsUUID         uint32
+	_opRepositoryRequestStreamArgsAlias        uint32
+	_opRepositoryRequestStreamArgsString       uint32
+	_opRepositoryRequestStreamArgsBool         uint32
+	_opRepositoryRequestStreamArgsDatetime     uint32
+	_opRepositoryRequestStreamArgsList         uint32
+	_opRepositoryRequestStreamArgsMap          uint32
+	_opRepositoryRequestChannelI64             uint32
+	_opRepositoryRequestChannelF64             uint32
+	_opRepositoryRequestChannelType            uint32
+	_opRepositoryRequestChannelEnum            uint32
+	_opRepositoryRequestChannelAlias           uint32
+	_opRepositoryRequestChannelString          uint32
+	_opRepositoryRequestChannelBool            uint32
+	_opRepositoryRequestChannelDatetime        uint32
+	_opRepositoryRequestChannelList            uint32
+	_opRepositoryRequestChannelMap             uint32
+	_opRepositoryRequestChannelArgsI64         uint32
+	_opRepositoryRequestChannelArgsF64         uint32
+	_opRepositoryRequestChannelArgsType        uint32
+	_opRepositoryRequestChannelArgsEnum        uint32
+	_opRepositoryRequestChannelArgsAlias       uint32
+	_opRepositoryRequestChannelArgsString      uint32
+	_opRepositoryRequestChannelArgsBool        uint32
+	_opRepositoryRequestChannelArgsDatetime    uint32
+	_opRepositoryRequestChannelArgsList        uint32
+	_opRepositoryRequestChannelArgsMap         uint32
+	_opRepositoryRequestChannelVoid            uint32
+	_opRepositoryRequestChannelNonStreamOutput uint32
 }
 
 func New(caller invoke.Caller) *Client {
 	return &Client{
-		caller:               caller,
-		_opRepositoryGetData: invoke.ImportRequestResponse("iota.testing.Repository", "getData"),
+		caller:                                     caller,
+		_opRepositoryRequestStreamI64:              invoke.ImportRequestStream("iota.testing.Repository", "requestStreamI64"),
+		_opRepositoryRequestStreamF64:              invoke.ImportRequestStream("iota.testing.Repository", "requestStreamF64"),
+		_opRepositoryRequestStreamType:             invoke.ImportRequestStream("iota.testing.Repository", "requestStreamType"),
+		_opRepositoryRequestStreamEnum:             invoke.ImportRequestStream("iota.testing.Repository", "requestStreamEnum"),
+		_opRepositoryRequestStreamUUID:             invoke.ImportRequestStream("iota.testing.Repository", "requestStreamUUID"),
+		_opRepositoryRequestStreamAlias:            invoke.ImportRequestStream("iota.testing.Repository", "requestStreamAlias"),
+		_opRepositoryRequestStreamString:           invoke.ImportRequestStream("iota.testing.Repository", "requestStreamString"),
+		_opRepositoryRequestStreamBool:             invoke.ImportRequestStream("iota.testing.Repository", "requestStreamBool"),
+		_opRepositoryRequestStreamDatetime:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamDatetime"),
+		_opRepositoryRequestStreamList:             invoke.ImportRequestStream("iota.testing.Repository", "requestStreamList"),
+		_opRepositoryRequestStreamMap:              invoke.ImportRequestStream("iota.testing.Repository", "requestStreamMap"),
+		_opRepositoryRequestStreamArgsI64:          invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsI64"),
+		_opRepositoryRequestStreamArgsF64:          invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsF64"),
+		_opRepositoryRequestStreamArgsType:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsType"),
+		_opRepositoryRequestStreamArgsEnum:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsEnum"),
+		_opRepositoryRequestStreamArgsUUID:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsUUID"),
+		_opRepositoryRequestStreamArgsAlias:        invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsAlias"),
+		_opRepositoryRequestStreamArgsString:       invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsString"),
+		_opRepositoryRequestStreamArgsBool:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsBool"),
+		_opRepositoryRequestStreamArgsDatetime:     invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsDatetime"),
+		_opRepositoryRequestStreamArgsList:         invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsList"),
+		_opRepositoryRequestStreamArgsMap:          invoke.ImportRequestStream("iota.testing.Repository", "requestStreamArgsMap"),
+		_opRepositoryRequestChannelI64:             invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelI64"),
+		_opRepositoryRequestChannelF64:             invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelF64"),
+		_opRepositoryRequestChannelType:            invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelType"),
+		_opRepositoryRequestChannelEnum:            invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelEnum"),
+		_opRepositoryRequestChannelAlias:           invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelAlias"),
+		_opRepositoryRequestChannelString:          invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelString"),
+		_opRepositoryRequestChannelBool:            invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelBool"),
+		_opRepositoryRequestChannelDatetime:        invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelDatetime"),
+		_opRepositoryRequestChannelList:            invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelList"),
+		_opRepositoryRequestChannelMap:             invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelMap"),
+		_opRepositoryRequestChannelArgsI64:         invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsI64"),
+		_opRepositoryRequestChannelArgsF64:         invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsF64"),
+		_opRepositoryRequestChannelArgsType:        invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsType"),
+		_opRepositoryRequestChannelArgsEnum:        invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsEnum"),
+		_opRepositoryRequestChannelArgsAlias:       invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsAlias"),
+		_opRepositoryRequestChannelArgsString:      invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsString"),
+		_opRepositoryRequestChannelArgsBool:        invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsBool"),
+		_opRepositoryRequestChannelArgsDatetime:    invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsDatetime"),
+		_opRepositoryRequestChannelArgsList:        invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsList"),
+		_opRepositoryRequestChannelArgsMap:         invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelArgsMap"),
+		_opRepositoryRequestChannelVoid:            invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelVoid"),
+		_opRepositoryRequestChannelNonStreamOutput: invoke.ImportRequestChannel("iota.testing.Repository", "requestChannelNonStreamOutput"),
 	}
 }
 func (c *Client) Dependencies() Dependencies {
@@ -3603,15 +4732,753 @@ func (c *Client) Repository() Repository {
 	}
 }
 
-func (r *RepositoryClient) GetData(ctx context.Context) mono.Mono[MyType] {
+func (r *RepositoryClient) RequestStreamI64(ctx context.Context) flux.Flux[int64] {
 	payloadData := []byte{}
 	var metadata [16]byte
 	stream, ok := proxy.FromContext(ctx)
-	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryGetData)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamI64)
 	if ok {
 		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
 	}
 	pl := payload.New(payloadData, metadata[:])
-	future := r.c.caller.RequestResponse(ctx, pl)
-	return mono.Map(future, transform.MsgPackDecode[MyType])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Int64.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamF64(ctx context.Context) flux.Flux[float64] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamF64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Float64.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamType(ctx context.Context) flux.Flux[MyType] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamType)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.MsgPackDecode[MyType])
+}
+
+func (r *RepositoryClient) RequestStreamEnum(ctx context.Context) flux.Flux[MyEnum] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamEnum)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Int32Decode[MyEnum])
+}
+
+func (r *RepositoryClient) RequestStreamUUID(ctx context.Context) flux.Flux[uuid.UUID] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamUUID)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.ToStringDecode(func(val string) (uuid.UUID, error) {
+		return uuid.Parse(val)
+	}))
+}
+
+func (r *RepositoryClient) RequestStreamAlias(ctx context.Context) flux.Flux[MyAlias] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamAlias)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.StringDecode[MyAlias])
+}
+
+func (r *RepositoryClient) RequestStreamString(ctx context.Context) flux.Flux[string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamString)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.String.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamBool(ctx context.Context) flux.Flux[bool] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamBool)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Bool.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamDatetime(ctx context.Context) flux.Flux[time.Time] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamDatetime)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Time.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamList(ctx context.Context) flux.Flux[[]string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamList)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.SliceDecode(func(decoder msgpack.Reader) (string, error) {
+		return decoder.ReadString()
+	}))
+}
+
+func (r *RepositoryClient) RequestStreamMap(ctx context.Context) flux.Flux[map[string]string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamMap)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.MapDecode(
+		func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}, func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}))
+}
+
+func (r *RepositoryClient) RequestStreamArgsI64(ctx context.Context, value int64) flux.Flux[int64] {
+	request := RepositoryRequestStreamArgsI64Args{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[int64](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsI64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Int64.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamArgsF64(ctx context.Context, value float64) flux.Flux[float64] {
+	request := RepositoryRequestStreamArgsF64Args{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[float64](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsF64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Float64.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamArgsType(ctx context.Context, value *MyType) flux.Flux[MyType] {
+	request := RepositoryRequestStreamArgsTypeArgs{
+		Value: *value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[MyType](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsType)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.MsgPackDecode[MyType])
+}
+
+func (r *RepositoryClient) RequestStreamArgsEnum(ctx context.Context, value MyEnum) flux.Flux[MyEnum] {
+	request := RepositoryRequestStreamArgsEnumArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[MyEnum](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsEnum)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Int32Decode[MyEnum])
+}
+
+func (r *RepositoryClient) RequestStreamArgsUUID(ctx context.Context, value uuid.UUID) flux.Flux[uuid.UUID] {
+	request := RepositoryRequestStreamArgsUUIDArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[uuid.UUID](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsUUID)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.ToStringDecode(func(val string) (uuid.UUID, error) {
+		return uuid.Parse(val)
+	}))
+}
+
+func (r *RepositoryClient) RequestStreamArgsAlias(ctx context.Context, value MyAlias) flux.Flux[MyAlias] {
+	request := RepositoryRequestStreamArgsAliasArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[MyAlias](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsAlias)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.StringDecode[MyAlias])
+}
+
+func (r *RepositoryClient) RequestStreamArgsString(ctx context.Context, value string) flux.Flux[string] {
+	request := RepositoryRequestStreamArgsStringArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsString)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.String.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamArgsBool(ctx context.Context, value bool) flux.Flux[bool] {
+	request := RepositoryRequestStreamArgsBoolArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[bool](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsBool)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Bool.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamArgsDatetime(ctx context.Context, value time.Time) flux.Flux[time.Time] {
+	request := RepositoryRequestStreamArgsDatetimeArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[time.Time](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsDatetime)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.Time.Decode)
+}
+
+func (r *RepositoryClient) RequestStreamArgsList(ctx context.Context, value []string) flux.Flux[[]string] {
+	request := RepositoryRequestStreamArgsListArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[[]string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsList)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.SliceDecode(func(decoder msgpack.Reader) (string, error) {
+		return decoder.ReadString()
+	}))
+}
+
+func (r *RepositoryClient) RequestStreamArgsMap(ctx context.Context, value map[string]string) flux.Flux[map[string]string] {
+	request := RepositoryRequestStreamArgsMapArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[map[string]string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestStreamArgsMap)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestStream(ctx, pl)
+	return flux.Map(future, transform.MapDecode(
+		func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}, func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}))
+}
+
+func (r *RepositoryClient) RequestChannelI64(ctx context.Context, in flux.Flux[int64]) flux.Flux[int64] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelI64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int64.Encode))
+	return flux.Map(future, transform.Int64.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelF64(ctx context.Context, in flux.Flux[float64]) flux.Flux[float64] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelF64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Float64.Encode))
+	return flux.Map(future, transform.Float64.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelType(ctx context.Context, in flux.Flux[MyType]) flux.Flux[MyType] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelType)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.MsgPackEncode[MyType]))
+	return flux.Map(future, transform.MsgPackDecode[MyType])
+}
+
+func (r *RepositoryClient) RequestChannelEnum(ctx context.Context, in flux.Flux[MyEnum]) flux.Flux[MyEnum] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelEnum)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int32Encode[MyEnum]))
+	return flux.Map(future, transform.Int32Decode[MyEnum])
+}
+
+func (r *RepositoryClient) RequestChannelAlias(ctx context.Context, in flux.Flux[uuid.UUID]) flux.Flux[uuid.UUID] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelAlias)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.ToStringEncode(func(val uuid.UUID) string {
+		return val.String()
+	})))
+	return flux.Map(future, transform.ToStringDecode(func(val string) (uuid.UUID, error) {
+		return uuid.Parse(val)
+	}))
+}
+
+func (r *RepositoryClient) RequestChannelString(ctx context.Context, in flux.Flux[string]) flux.Flux[string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelString)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.String.Encode))
+	return flux.Map(future, transform.String.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelBool(ctx context.Context, in flux.Flux[bool]) flux.Flux[bool] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelBool)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Bool.Encode))
+	return flux.Map(future, transform.Bool.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelDatetime(ctx context.Context, in flux.Flux[time.Time]) flux.Flux[time.Time] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelDatetime)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Time.Encode))
+	return flux.Map(future, transform.Time.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelList(ctx context.Context, in flux.Flux[[]string]) flux.Flux[[]string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelList)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.SliceEncode(func(writer msgpack.Writer, val string) {
+		writer.WriteString(val)
+	})))
+	return flux.Map(future, transform.SliceDecode(func(decoder msgpack.Reader) (string, error) {
+		return decoder.ReadString()
+	}))
+}
+
+func (r *RepositoryClient) RequestChannelMap(ctx context.Context, in flux.Flux[map[string]string]) flux.Flux[map[string]string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelMap)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.MapEncode(func(writer msgpack.Writer, key string) {
+		writer.WriteString(key)
+	}, func(writer msgpack.Writer, val string) {
+		writer.WriteString(val)
+	})))
+	return flux.Map(future, transform.MapDecode(
+		func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}, func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}))
+}
+
+func (r *RepositoryClient) RequestChannelArgsI64(ctx context.Context, value int64, in flux.Flux[int64]) flux.Flux[int64] {
+	request := RepositoryRequestChannelArgsI64Args{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[int64](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsI64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int64.Encode))
+	return flux.Map(future, transform.Int64.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelArgsF64(ctx context.Context, value float64, in flux.Flux[float64]) flux.Flux[float64] {
+	request := RepositoryRequestChannelArgsF64Args{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[float64](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsF64)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Float64.Encode))
+	return flux.Map(future, transform.Float64.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelArgsType(ctx context.Context, value *MyType, in flux.Flux[MyType]) flux.Flux[MyType] {
+	request := RepositoryRequestChannelArgsTypeArgs{
+		Value: *value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[MyType](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsType)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.MsgPackEncode[MyType]))
+	return flux.Map(future, transform.MsgPackDecode[MyType])
+}
+
+func (r *RepositoryClient) RequestChannelArgsEnum(ctx context.Context, value MyEnum, in flux.Flux[MyEnum]) flux.Flux[MyEnum] {
+	request := RepositoryRequestChannelArgsEnumArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[MyEnum](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsEnum)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int32Encode[MyEnum]))
+	return flux.Map(future, transform.Int32Decode[MyEnum])
+}
+
+func (r *RepositoryClient) RequestChannelArgsAlias(ctx context.Context, value uuid.UUID, in flux.Flux[uuid.UUID]) flux.Flux[uuid.UUID] {
+	request := RepositoryRequestChannelArgsAliasArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[uuid.UUID](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsAlias)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.ToStringEncode(func(val uuid.UUID) string {
+		return val.String()
+	})))
+	return flux.Map(future, transform.ToStringDecode(func(val string) (uuid.UUID, error) {
+		return uuid.Parse(val)
+	}))
+}
+
+func (r *RepositoryClient) RequestChannelArgsString(ctx context.Context, value string, in flux.Flux[string]) flux.Flux[string] {
+	request := RepositoryRequestChannelArgsStringArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsString)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.String.Encode))
+	return flux.Map(future, transform.String.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelArgsBool(ctx context.Context, value bool, in flux.Flux[bool]) flux.Flux[bool] {
+	request := RepositoryRequestChannelArgsBoolArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[bool](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsBool)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Bool.Encode))
+	return flux.Map(future, transform.Bool.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelArgsDatetime(ctx context.Context, value time.Time, in flux.Flux[time.Time]) flux.Flux[time.Time] {
+	request := RepositoryRequestChannelArgsDatetimeArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[time.Time](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsDatetime)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Time.Encode))
+	return flux.Map(future, transform.Time.Decode)
+}
+
+func (r *RepositoryClient) RequestChannelArgsList(ctx context.Context, value []string, in flux.Flux[[]string]) flux.Flux[[]string] {
+	request := RepositoryRequestChannelArgsListArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[[]string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsList)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.SliceEncode(func(writer msgpack.Writer, val string) {
+		writer.WriteString(val)
+	})))
+	return flux.Map(future, transform.SliceDecode(func(decoder msgpack.Reader) (string, error) {
+		return decoder.ReadString()
+	}))
+}
+
+func (r *RepositoryClient) RequestChannelArgsMap(ctx context.Context, value map[string]string, in flux.Flux[map[string]string]) flux.Flux[map[string]string] {
+	request := RepositoryRequestChannelArgsMapArgs{
+		Value: value,
+	}
+	payloadData, err := msgpack.ToBytes(&request)
+	if err != nil {
+		return flux.Error[map[string]string](err)
+	}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelArgsMap)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.MapEncode(func(writer msgpack.Writer, key string) {
+		writer.WriteString(key)
+	}, func(writer msgpack.Writer, val string) {
+		writer.WriteString(val)
+	})))
+	return flux.Map(future, transform.MapDecode(
+		func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}, func(decoder msgpack.Reader) (string, error) {
+			return decoder.ReadString()
+		}))
+}
+
+func (r *RepositoryClient) RequestChannelVoid(ctx context.Context, in flux.Flux[int64]) mono.Void {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelVoid)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	future := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int64.Encode))
+	return transform.FluxToVoid(future)
+}
+
+func (r *RepositoryClient) RequestChannelNonStreamOutput(ctx context.Context, in flux.Flux[int64]) mono.Mono[string] {
+	payloadData := []byte{}
+	var metadata [16]byte
+	stream, ok := proxy.FromContext(ctx)
+	binary.BigEndian.PutUint32(metadata[0:4], r.c._opRepositoryRequestChannelNonStreamOutput)
+	if ok {
+		binary.BigEndian.PutUint32(metadata[4:8], stream.StreamID())
+	}
+	pl := payload.New(payloadData, metadata[:])
+	futureStream := r.c.caller.RequestChannel(ctx, pl, flux.Map(in, transform.Int64.Encode))
+	future := transform.FluxToMono(futureStream)
+	return mono.Map(future, transform.String.Decode)
 }

@@ -114,7 +114,50 @@ type MyService interface {
 }
 
 type Repository interface {
-	GetData(ctx context.Context) mono.Mono[MyType]
+	RequestStreamI64(ctx context.Context) flux.Flux[int64]
+	RequestStreamF64(ctx context.Context) flux.Flux[float64]
+	RequestStreamType(ctx context.Context) flux.Flux[MyType]
+	RequestStreamEnum(ctx context.Context) flux.Flux[MyEnum]
+	RequestStreamUUID(ctx context.Context) flux.Flux[uuid.UUID]
+	RequestStreamAlias(ctx context.Context) flux.Flux[MyAlias]
+	RequestStreamString(ctx context.Context) flux.Flux[string]
+	RequestStreamBool(ctx context.Context) flux.Flux[bool]
+	RequestStreamDatetime(ctx context.Context) flux.Flux[time.Time]
+	RequestStreamList(ctx context.Context) flux.Flux[[]string]
+	RequestStreamMap(ctx context.Context) flux.Flux[map[string]string]
+	RequestStreamArgsI64(ctx context.Context, value int64) flux.Flux[int64]
+	RequestStreamArgsF64(ctx context.Context, value float64) flux.Flux[float64]
+	RequestStreamArgsType(ctx context.Context, value *MyType) flux.Flux[MyType]
+	RequestStreamArgsEnum(ctx context.Context, value MyEnum) flux.Flux[MyEnum]
+	RequestStreamArgsUUID(ctx context.Context, value uuid.UUID) flux.Flux[uuid.UUID]
+	RequestStreamArgsAlias(ctx context.Context, value MyAlias) flux.Flux[MyAlias]
+	RequestStreamArgsString(ctx context.Context, value string) flux.Flux[string]
+	RequestStreamArgsBool(ctx context.Context, value bool) flux.Flux[bool]
+	RequestStreamArgsDatetime(ctx context.Context, value time.Time) flux.Flux[time.Time]
+	RequestStreamArgsList(ctx context.Context, value []string) flux.Flux[[]string]
+	RequestStreamArgsMap(ctx context.Context, value map[string]string) flux.Flux[map[string]string]
+	RequestChannelI64(ctx context.Context, in flux.Flux[int64]) flux.Flux[int64]
+	RequestChannelF64(ctx context.Context, in flux.Flux[float64]) flux.Flux[float64]
+	RequestChannelType(ctx context.Context, in flux.Flux[MyType]) flux.Flux[MyType]
+	RequestChannelEnum(ctx context.Context, in flux.Flux[MyEnum]) flux.Flux[MyEnum]
+	RequestChannelAlias(ctx context.Context, in flux.Flux[uuid.UUID]) flux.Flux[uuid.UUID]
+	RequestChannelString(ctx context.Context, in flux.Flux[string]) flux.Flux[string]
+	RequestChannelBool(ctx context.Context, in flux.Flux[bool]) flux.Flux[bool]
+	RequestChannelDatetime(ctx context.Context, in flux.Flux[time.Time]) flux.Flux[time.Time]
+	RequestChannelList(ctx context.Context, in flux.Flux[[]string]) flux.Flux[[]string]
+	RequestChannelMap(ctx context.Context, in flux.Flux[map[string]string]) flux.Flux[map[string]string]
+	RequestChannelArgsI64(ctx context.Context, value int64, in flux.Flux[int64]) flux.Flux[int64]
+	RequestChannelArgsF64(ctx context.Context, value float64, in flux.Flux[float64]) flux.Flux[float64]
+	RequestChannelArgsType(ctx context.Context, value *MyType, in flux.Flux[MyType]) flux.Flux[MyType]
+	RequestChannelArgsEnum(ctx context.Context, value MyEnum, in flux.Flux[MyEnum]) flux.Flux[MyEnum]
+	RequestChannelArgsAlias(ctx context.Context, value uuid.UUID, in flux.Flux[uuid.UUID]) flux.Flux[uuid.UUID]
+	RequestChannelArgsString(ctx context.Context, value string, in flux.Flux[string]) flux.Flux[string]
+	RequestChannelArgsBool(ctx context.Context, value bool, in flux.Flux[bool]) flux.Flux[bool]
+	RequestChannelArgsDatetime(ctx context.Context, value time.Time, in flux.Flux[time.Time]) flux.Flux[time.Time]
+	RequestChannelArgsList(ctx context.Context, value []string, in flux.Flux[[]string]) flux.Flux[[]string]
+	RequestChannelArgsMap(ctx context.Context, value map[string]string, in flux.Flux[map[string]string]) flux.Flux[map[string]string]
+	RequestChannelVoid(ctx context.Context, in flux.Flux[int64]) mono.Void
+	RequestChannelNonStreamOutput(ctx context.Context, in flux.Flux[int64]) mono.Mono[string]
 }
 
 // MyType is a class
@@ -2438,6 +2481,1049 @@ func (o *MyServiceFuncMapArgs) Encode(encoder msgpack.Writer) error {
 	encoder.WriteMapSize(uint32(len(o.Optional)))
 	if o.Optional != nil { // TinyGo bug: ranging over nil maps panics.
 		for k, v := range o.Optional {
+			encoder.WriteString(k)
+			encoder.WriteString(v)
+		}
+	}
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsI64Args struct {
+	Value int64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsI64Args returns a
+// `RepositoryRequestStreamArgsI64Args` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsI64Args() RepositoryRequestStreamArgsI64Args {
+	return RepositoryRequestStreamArgsI64Args{}
+}
+
+func (o *RepositoryRequestStreamArgsI64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadInt64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsI64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsF64Args struct {
+	Value float64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsF64Args returns a
+// `RepositoryRequestStreamArgsF64Args` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsF64Args() RepositoryRequestStreamArgsF64Args {
+	return RepositoryRequestStreamArgsF64Args{}
+}
+
+func (o *RepositoryRequestStreamArgsF64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadFloat64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsF64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteFloat64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsTypeArgs struct {
+	Value MyType `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsTypeArgs returns a
+// `RepositoryRequestStreamArgsTypeArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsTypeArgs() RepositoryRequestStreamArgsTypeArgs {
+	return RepositoryRequestStreamArgsTypeArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsTypeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			err = o.Value.Decode(decoder)
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsTypeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	o.Value.Encode(encoder)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsEnumArgs struct {
+	Value MyEnum `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsEnumArgs returns a
+// `RepositoryRequestStreamArgsEnumArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsEnumArgs() RepositoryRequestStreamArgsEnumArgs {
+	return RepositoryRequestStreamArgsEnumArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsEnumArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Numeric[MyEnum](decoder.ReadInt32())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsEnumArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt32(int32(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsUUIDArgs struct {
+	Value uuid.UUID `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsUUIDArgs returns a
+// `RepositoryRequestStreamArgsUUIDArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsUUIDArgs() RepositoryRequestStreamArgsUUIDArgs {
+	return RepositoryRequestStreamArgsUUIDArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsUUIDArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Parse(uuid.Parse)(decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsUUIDArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value.String())
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsAliasArgs struct {
+	Value MyAlias `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsAliasArgs returns a
+// `RepositoryRequestStreamArgsAliasArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsAliasArgs() RepositoryRequestStreamArgsAliasArgs {
+	return RepositoryRequestStreamArgsAliasArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsAliasArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.String[MyAlias](decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsAliasArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(string(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsStringArgs struct {
+	Value string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsStringArgs returns a
+// `RepositoryRequestStreamArgsStringArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestStreamArgsStringArgs() RepositoryRequestStreamArgsStringArgs {
+	return RepositoryRequestStreamArgsStringArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsStringArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadString()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsStringArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsBoolArgs struct {
+	Value bool `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsBoolArgs returns a
+// `RepositoryRequestStreamArgsBoolArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsBoolArgs() RepositoryRequestStreamArgsBoolArgs {
+	return RepositoryRequestStreamArgsBoolArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsBoolArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadBool()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsBoolArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteBool(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsDatetimeArgs struct {
+	Value time.Time `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsDatetimeArgs returns a
+// `RepositoryRequestStreamArgsDatetimeArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestStreamArgsDatetimeArgs() RepositoryRequestStreamArgsDatetimeArgs {
+	return RepositoryRequestStreamArgsDatetimeArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsDatetimeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadTime()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsDatetimeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteTime(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsListArgs struct {
+	Value []string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsListArgs returns a
+// `RepositoryRequestStreamArgsListArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsListArgs() RepositoryRequestStreamArgsListArgs {
+	return RepositoryRequestStreamArgsListArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsListArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadSlice(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsListArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteArraySize(uint32(len(o.Value)))
+	for _, v := range o.Value {
+		encoder.WriteString(v)
+	}
+
+	return nil
+}
+
+type RepositoryRequestStreamArgsMapArgs struct {
+	Value map[string]string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestStreamArgsMapArgs returns a
+// `RepositoryRequestStreamArgsMapArgs` struct populated with its default values.
+func DefaultRepositoryRequestStreamArgsMapArgs() RepositoryRequestStreamArgsMapArgs {
+	return RepositoryRequestStreamArgsMapArgs{}
+}
+
+func (o *RepositoryRequestStreamArgsMapArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadMap(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			}, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestStreamArgsMapArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteMapSize(uint32(len(o.Value)))
+	if o.Value != nil { // TinyGo bug: ranging over nil maps panics.
+		for k, v := range o.Value {
+			encoder.WriteString(k)
+			encoder.WriteString(v)
+		}
+	}
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsI64Args struct {
+	Value int64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsI64Args returns a
+// `RepositoryRequestChannelArgsI64Args` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsI64Args() RepositoryRequestChannelArgsI64Args {
+	return RepositoryRequestChannelArgsI64Args{}
+}
+
+func (o *RepositoryRequestChannelArgsI64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadInt64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsI64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsF64Args struct {
+	Value float64 `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsF64Args returns a
+// `RepositoryRequestChannelArgsF64Args` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsF64Args() RepositoryRequestChannelArgsF64Args {
+	return RepositoryRequestChannelArgsF64Args{}
+}
+
+func (o *RepositoryRequestChannelArgsF64Args) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadFloat64()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsF64Args) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteFloat64(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsTypeArgs struct {
+	Value MyType `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsTypeArgs returns a
+// `RepositoryRequestChannelArgsTypeArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsTypeArgs() RepositoryRequestChannelArgsTypeArgs {
+	return RepositoryRequestChannelArgsTypeArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsTypeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			err = o.Value.Decode(decoder)
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsTypeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	o.Value.Encode(encoder)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsEnumArgs struct {
+	Value MyEnum `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsEnumArgs returns a
+// `RepositoryRequestChannelArgsEnumArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsEnumArgs() RepositoryRequestChannelArgsEnumArgs {
+	return RepositoryRequestChannelArgsEnumArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsEnumArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Numeric[MyEnum](decoder.ReadInt32())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsEnumArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteInt32(int32(o.Value))
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsAliasArgs struct {
+	Value uuid.UUID `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsAliasArgs returns a
+// `RepositoryRequestChannelArgsAliasArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsAliasArgs() RepositoryRequestChannelArgsAliasArgs {
+	return RepositoryRequestChannelArgsAliasArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsAliasArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = convert.Parse(uuid.Parse)(decoder.ReadString())
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsAliasArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value.String())
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsStringArgs struct {
+	Value string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsStringArgs returns a
+// `RepositoryRequestChannelArgsStringArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsStringArgs() RepositoryRequestChannelArgsStringArgs {
+	return RepositoryRequestChannelArgsStringArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsStringArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadString()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsStringArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteString(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsBoolArgs struct {
+	Value bool `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsBoolArgs returns a
+// `RepositoryRequestChannelArgsBoolArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsBoolArgs() RepositoryRequestChannelArgsBoolArgs {
+	return RepositoryRequestChannelArgsBoolArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsBoolArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadBool()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsBoolArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteBool(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsDatetimeArgs struct {
+	Value time.Time `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsDatetimeArgs returns a
+// `RepositoryRequestChannelArgsDatetimeArgs` struct populated with its default
+// values.
+func DefaultRepositoryRequestChannelArgsDatetimeArgs() RepositoryRequestChannelArgsDatetimeArgs {
+	return RepositoryRequestChannelArgsDatetimeArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsDatetimeArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = decoder.ReadTime()
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsDatetimeArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteTime(o.Value)
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsListArgs struct {
+	Value []string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsListArgs returns a
+// `RepositoryRequestChannelArgsListArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsListArgs() RepositoryRequestChannelArgsListArgs {
+	return RepositoryRequestChannelArgsListArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsListArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadSlice(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsListArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteArraySize(uint32(len(o.Value)))
+	for _, v := range o.Value {
+		encoder.WriteString(v)
+	}
+
+	return nil
+}
+
+type RepositoryRequestChannelArgsMapArgs struct {
+	Value map[string]string `json:"value" yaml:"value" msgpack:"value"`
+}
+
+// DefaultRepositoryRequestChannelArgsMapArgs returns a
+// `RepositoryRequestChannelArgsMapArgs` struct populated with its default values.
+func DefaultRepositoryRequestChannelArgsMapArgs() RepositoryRequestChannelArgsMapArgs {
+	return RepositoryRequestChannelArgsMapArgs{}
+}
+
+func (o *RepositoryRequestChannelArgsMapArgs) Decode(decoder msgpack.Reader) error {
+	numFields, err := decoder.ReadMapSize()
+	if err != nil {
+		return err
+	}
+
+	for numFields > 0 {
+		numFields--
+		field, err := decoder.ReadString()
+		if err != nil {
+			return err
+		}
+		switch field {
+		case "value":
+			o.Value, err = msgpack.ReadMap(decoder, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			}, func(decoder msgpack.Reader) (string, error) {
+				return decoder.ReadString()
+			})
+		default:
+			err = decoder.Skip()
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (o *RepositoryRequestChannelArgsMapArgs) Encode(encoder msgpack.Writer) error {
+	if o == nil {
+		encoder.WriteNil()
+		return nil
+	}
+	encoder.WriteMapSize(1)
+	encoder.WriteString("value")
+	encoder.WriteMapSize(uint32(len(o.Value)))
+	if o.Value != nil { // TinyGo bug: ranging over nil maps panics.
+		for k, v := range o.Value {
 			encoder.WriteString(k)
 			encoder.WriteString(v)
 		}
