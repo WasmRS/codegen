@@ -12,6 +12,16 @@ import { convertType } from "../utils/types.ts";
 
 import { SourceGenerator } from "./base.ts";
 import { ActionKind, Actions, determineVariant, stream } from "../utils/mod.ts";
+import {
+  Call,
+  Fn,
+  If,
+  Let,
+  Match,
+  Spawn,
+  While,
+} from "../utils/code-builder.ts";
+import { operationDecisions } from "../utils/decisions.ts";
 
 const { rustify, rustifyCaps, trimLines } = rust.utils;
 
@@ -143,29 +153,15 @@ export function convertOperation(
   _global: boolean,
   config: ObjectMap,
 ): [string, string, string] {
-  const opName = rustify(op.name);
-  const service_module = `${rustify(iface)}_service`;
-  const opModule = `${service_module}::${opName}`;
-  const component_name = `${rustifyCaps(iface)}Component`;
-
-  const comment = convertDescription(op.description);
-
-  const variant = determineVariant(op);
+  const $op = operationDecisions(op, iface, config);
   let traitFn, wrapper;
-  let qualifiedInputType;
-  if (op.unary) {
-    qualifiedInputType = convertType(op.parameters[0].type, config);
-  } else {
-    qualifiedInputType = `${opModule}::Input`;
-  }
-  const qualifiedOutputType = `${opModule}::Output`;
 
   let inputBuilder;
   if (op.unary) {
     const p = op.parameters[0];
     inputBuilder = paramDeserializer(p, config);
   } else {
-    inputBuilder = `${qualifiedInputType} {${
+    inputBuilder = `${$op.qualifiedInputType} {${
       op.parameters
         .map(propertyParamDeserializer(config))
         .join("\n")
@@ -177,7 +173,7 @@ export function convertOperation(
     simpleInputDeserializer = Fn(
       `des`,
     ).Args("mut map: std::collections::BTreeMap<String, Value>").Type(
-      `Result<${qualifiedInputType}, Error>`,
+      `Result<${$op.qualifiedInputType}, Error>`,
     ).Body(
       `Ok(${inputBuilder})`,
     );
@@ -185,20 +181,20 @@ export function convertOperation(
     simpleInputDeserializer = Fn(
       `des`,
     ).Args("_map: std::collections::BTreeMap<String, Value>").Type(
-      `Result<${qualifiedInputType}, Error>`,
+      `Result<${$op.qualifiedInputType}, Error>`,
     ).Body(
       `unreachable!()`,
     );
   }
 
-  if (variant === ActionKind.RequestResponse) {
+  if ($op.variant === ActionKind.RequestResponse) {
     traitFn = `
-    ${trimLines([comment])}
-    async fn ${opName}(input: ${qualifiedInputType}) -> Result<${qualifiedOutputType}, GenericError>
+    ${trimLines([$op.comment])}
+    async fn ${$op.lcName}(input: ${$op.qualifiedInputType}) -> Result<${$op.qualifiedOutputType}, GenericError>
     `;
 
     wrapper = Fn(
-      `${opName}_wrapper`,
+      `${$op.lcName}_wrapper`,
     ).Args([`input: IncomingMono`]).Type(`Result<OutgoingMono, GenericError>`)
       .Body(
         [
@@ -210,13 +206,15 @@ export function convertOperation(
               Match("input.await").Error("let _ = tx.send(Err(e)); return;")
             };`,
             simpleInputDeserializer,
-            `let _ = ${component_name}::${opName}(${
-              Match(Call("des").With("input_payload")).Error(
-                [
-                  "let _ = tx.send(Err(PayloadError::application_error(e.to_string())));",
-                  "return;",
-                ],
-              )
+            `let _ = ${$op.actionPath}(${
+              op.parameters.length > 0
+                ? Match(Call("des").With("input_payload")).Error(
+                  [
+                    "let _ = tx.send(Err(PayloadError::application_error(e.to_string())));",
+                    "return;",
+                  ],
+                )
+                : `${$op.qualifiedInputType} {}`
             })
           .await.map(|result| ${
               serializePayload("result")
@@ -225,16 +223,16 @@ export function convertOperation(
           "Ok(Mono::from_future(async move { rx.await? }))",
         ],
       );
-  } else if (variant === ActionKind.RequestStream) {
+  } else if ($op.variant === ActionKind.RequestStream) {
     traitFn = `
-    ${trimLines([comment])}
-    async fn ${opName}(
-      input: ${qualifiedInputType},
-    ) -> Result<${qualifiedOutputType}, GenericError>
+    ${trimLines([$op.comment])}
+    async fn ${$op.lcName}(
+      input: ${$op.qualifiedInputType},
+    ) -> Result<${$op.qualifiedOutputType}, GenericError>
     `;
 
     wrapper = Fn(
-      `${opName}_wrapper`,
+      `${$op.lcName}_wrapper`,
     ).Args("input: IncomingMono").Type(`Result<OutgoingStream, GenericError>`)
       .Body(
         [
@@ -250,7 +248,7 @@ export function convertOperation(
                 `let _ = out_tx.error(PayloadError::application_error(e.to_string()));return;`,
               )
             };`,
-            Match(`${component_name}::${opName}(input).await`).Cases({
+            Match(`${$op.actionPath}(input).await`).Cases({
               "Ok(mut result)": [
                 While("let Some(next) = result.next().await").Do(
                   [
@@ -272,19 +270,19 @@ export function convertOperation(
           "Ok(out_rx)",
         ],
       );
-  } else if (variant === ActionKind.RequestChannel) {
+  } else if ($op.variant === ActionKind.RequestChannel) {
     traitFn = `
-    ${trimLines([comment])}
-    async fn ${opName}(
-      input: ${qualifiedInputType},
-    ) -> Result<${qualifiedOutputType}, GenericError>
+    ${trimLines([$op.comment])}
+    async fn ${$op.lcName}(
+      input: ${$op.qualifiedInputType},
+    ) -> Result<${$op.qualifiedOutputType}, GenericError>
     `;
     const streamingParams = op.parameters.filter(stream);
 
     let deserializeHelper;
     if (streamingParams.length > 0) {
       deserializeHelper =
-        `move |payload: ParsedPayload| -> Result<${qualifiedInputType}, Error> {
+        `move |payload: ParsedPayload| -> Result<${$op.qualifiedInputType}, Error> {
       let mut map = deserialize_generic(&payload.data)?;
         let input = ${inputBuilder};
 
@@ -304,7 +302,7 @@ export function convertOperation(
     }`;
     } else {
       deserializeHelper =
-        `move |payload: ParsedPayload| -> Result<${qualifiedInputType}, Error> {unreachable!()}`;
+        `move |payload: ParsedPayload| -> Result<${$op.qualifiedInputType}, Error> {unreachable!()}`;
     }
 
     const inputStreams = op.parameters.filter(stream).flatMap((
@@ -340,7 +338,7 @@ export function convertOperation(
       "Err(e)": "let _ = real_out_tx.error(e);",
     });
     wrapper = Fn(
-      `${opName}_wrapper`,
+      `${$op.lcName}_wrapper`,
     ).Args(["input: IncomingStream"]).Type(
       `Result<OutgoingStream, GenericError>`,
     ).Body(
@@ -373,7 +371,7 @@ export function convertOperation(
               ]),
             ]).Else(`return;`)
           };`,
-          Match(`${component_name}::${opName}(input_map).await`).Cases({
+          Match(`${$op.actionPath}(input_map).await`).Cases({
             "Err(e)": [
               "let _ = real_out_tx.error(PayloadError::application_error(e.to_string()));",
               "return",
@@ -400,7 +398,7 @@ export function convertOperation(
   if (op.unary) {
     const arg = op.parameters[0] as Parameter;
     types = `
-      pub mod ${opName} {
+      pub mod ${$op.lcName} {
         #[allow(unused_imports)]
         pub(crate) use super::*;
 
@@ -417,7 +415,7 @@ export function convertOperation(
       })
       .join("\n");
     types = `
-      pub mod ${opName} {
+      pub mod ${$op.lcName} {
         #[allow(unused_imports)]
         pub(crate) use super::*;
 
@@ -431,166 +429,4 @@ export function convertOperation(
   }
 
   return [traitFn, wrapper, types];
-}
-
-// Trying out some utility functions to add some basic type checking to large chunks of generated code.
-
-type Lines = string | string[];
-
-function j(lines: Lines, separator = "\n"): string {
-  const block = Array.isArray(lines) ? lines.join(separator) : lines;
-  const openParens = block.match(/\(/g) || [];
-  const openCurlies = block.match(/\{/g) || [];
-  const closeParens = block.match(/\)/g) || [];
-  const closeCurlies = block.match(/\}/g) || [];
-  if (
-    openParens.length !== closeParens.length ||
-    openCurlies.length !== closeCurlies.length
-  ) {
-    console.error(lines);
-  }
-
-  return block;
-}
-
-function Fn(name: string): string & Fn {
-  return Object.assign(`fn ${name}`, { Args: _args });
-}
-
-export function If(expr: string): string & If {
-  const src = `if ${expr}`;
-  return Object.assign(src, { Then: _then });
-}
-
-export function Let(ids: Lines): string & Let {
-  let src;
-  if (Array.isArray(ids)) {
-    src = `let (${j(ids, ",")}) = `;
-  } else {
-    src = `let ${ids} = `;
-  }
-  return Object.assign(src, { Equal: _equal });
-}
-
-export function Call(expr: string): string & Call {
-  const src = `${expr}()`;
-  return Object.assign(src, { With: _with });
-}
-
-export function IgnoreReturn(expr: string): string {
-  return `let _ = ${expr}`;
-}
-
-export function While(expr: string): string & While {
-  const src = `while ${expr}`;
-  return Object.assign(src, { Do: _do });
-}
-
-export function Match(expr: string): string & Match {
-  const src = `match ${expr}`;
-  return Object.assign(src, {
-    Cases: _cases,
-    Error: (stmts: Lines): string => _cases.call(src, { err: stmts }),
-  });
-}
-
-function Spawn(statements: Lines): string {
-  return `spawn(async move ${_block(statements)});`;
-}
-
-function _then(this: string, statements: Lines): string & Then {
-  const src = `${this}${_block(statements)}`;
-  return Object.assign(src, { Else: _else });
-}
-
-function _else(this: string, statements: Lines): string {
-  return `${this}else${_block(statements)}`;
-}
-
-function _args(this: string, args: Lines): string & Args {
-  const src = `${this}(${j(args, ",")})`;
-  return Object.assign(src, { Type: _type });
-}
-
-function _type(this: string, type: string): string & Type {
-  const src = `${this}->${type}`;
-  return Object.assign(src, { Body: _body });
-}
-
-function _body(this: string, statements: Lines): string {
-  return `${this}${_block(statements)}`;
-}
-
-function _with(this: string, args: Lines): string {
-  // This removes the trailing `()` appended by the `Call` function.
-  const callee = this.substring(0, this.length - 2);
-  return `${callee}(${j(args, ",")})`;
-}
-
-function _cases(this: string, cases: Record<string, Lines>): string {
-  if (Object.keys(cases).length === 1 && "err" in cases) {
-    return `${this} {
-      Ok(o)=> o,
-      Err(e)=> ${_block(cases.err)},
-    }`;
-  } else {
-    return `${this} { ${
-      j(Object.entries(cases).map(([k, v]) => `${k} => ${_block(v)},`))
-    } }`;
-  }
-}
-
-function _do(this: string, statements: Lines): string {
-  return `${this}${_block(statements)}`;
-}
-
-function _equal(this: string, expr: Lines): string {
-  if (Array.isArray(expr)) {
-    return `${this}(${j(expr, ",")})`;
-  } else {
-    return `${this}${expr}`;
-  }
-}
-
-function _block(statements: Lines): string {
-  if (!Array.isArray(statements)) {
-    statements = [statements];
-  }
-  return `{${j(statements, "\n")}}`;
-}
-
-interface Then {
-  Else(expr: Lines): string;
-}
-
-interface Fn {
-  Args(params: Lines): string & Args;
-}
-
-interface Args {
-  Type(type: string): string & Type;
-}
-
-interface Type {
-  Body(body: Lines): string;
-}
-
-interface Call {
-  With(params: Lines): string;
-}
-
-interface If {
-  Then(stmts: Lines): string & Then;
-}
-
-interface Let {
-  Equal(expr: string): string;
-}
-interface Match {
-  Cases(cases: Record<string, Lines>): string;
-  Error(errCase: Lines): string;
-}
-
-interface While {
-  Do(stmts: Lines): string;
 }

@@ -18,6 +18,8 @@ import {
 import { convertType } from "../utils/types.ts";
 
 import { SourceGenerator } from "./base.ts";
+import { operationDecisions } from "../utils/decisions.ts";
+import { Fn, Match, Spawn, While } from "../utils/code-builder.ts";
 const { rustify, rustifyCaps, trimLines } = rust.utils;
 
 export class ProviderVisitor extends SourceGenerator<Interface> {
@@ -34,11 +36,8 @@ export class ProviderVisitor extends SourceGenerator<Interface> {
 
   buffer(): string {
     const rootName = rustifyCaps(this.node.name);
-
     const module_name = `${rustify(this.node.name)}`;
-
     const innerSource = this.writer.string();
-
     const comment = convertDescription(this.node.description);
 
     const indexConstants = this.node.operations.map((op, i) => {
@@ -112,8 +111,7 @@ function gen_request_response(
   interfaceName: string,
   config: ObjectMap,
 ): string {
-  const name = rustify(op.name);
-  const indexConstant = constantCase(`${interfaceName}_${name}`);
+  const $op = operationDecisions(op, interfaceName, config);
 
   const inputFields = op.parameters
     .map((p) => {
@@ -123,34 +121,36 @@ function gen_request_response(
     })
     .join("\n");
 
-  const lifetime = op.parameters.length > 0 ? "" : "";
-  const lifetimeIn = op.parameters.length > 0 ? "" : "";
+  const fn = Fn($op.lcName).Args(`input: ${$op.genericInputType}`).Type(
+    `wasmrs_guest::Mono<${$op.genericOutputType}, PayloadError>`,
+  ).Body([
+    `let op_id_bytes = ${$op.indexConstant}_INDEX_BYTES.as_slice();`,
+    `let payload = ${
+      Match(`wasmrs_guest::serialize(&input)`).Cases({
+        "Ok(bytes)":
+          "Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())",
+        "Err(e)":
+          "return Mono::new_error(PayloadError::application_error(e.to_string()))",
+      })
+    };`,
+    `let fut = wasmrs_guest::FutureExt::map(Host::default().request_response(payload), |result| {
+      result.map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?
+    });`,
+    `Mono::from_future(fut)`,
+  ]);
 
   return `
-pub(crate) fn ${name}(
-  inputs: ${name}::Inputs${lifetimeIn},
-) -> wasmrs_guest::Mono<${name}::Outputs, PayloadError> {
-  let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
-  let payload = match wasmrs_guest::serialize(&inputs) {
-      Ok(bytes) => Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into()),
-      Err(e) => return Mono::new_error(PayloadError::application_error(e.to_string())),
-  };
-  let fut = Host::default().request_response(payload).map(|result| {
-      result
-          .map(|payload| Ok(deserialize::<${name}::Outputs>(&payload.data.unwrap())?))?
-  });
-  Mono::from_future(fut)
-}
+pub(crate) ${fn}
 
-pub(crate) mod ${name} {
+pub(crate) mod ${$op.lcName} {
   use super::*;
 
   #[derive(serde::Serialize, serde::Deserialize)]
-  pub struct Inputs${lifetime} {
+  pub struct ${$op.inputTypeName} {
     ${inputFields}
   }
 
-  pub(crate) type Outputs = ${convertType(op.type, config)};
+  pub(crate) type ${$op.outputTypeName} = ${$op.outputType};
 }
 `;
 }
@@ -160,8 +160,7 @@ function gen_request_stream(
   interfaceName: string,
   config: ObjectMap,
 ): string {
-  const name = rustify(op.name);
-  const indexConstant = constantCase(`${interfaceName}_${name}`);
+  const $op = operationDecisions(op, interfaceName, config);
 
   const inputFields = op.parameters
     .map((p) => {
@@ -171,34 +170,26 @@ function gen_request_stream(
     })
     .join("\n");
 
-  const lifetime = op.parameters.length > 0 ? "" : "";
-  const lifetimeIn = op.parameters.length > 0 ? "" : "";
+  const fn = Fn($op.lcName).Args(`input: ${$op.genericInputType}`).Type(
+    `impl Stream<Item = Result<${$op.genericOutputType}, PayloadError>>`,
+  ).Body([
+    `let op_id_bytes = ${$op.indexConstant}_INDEX_BYTES.as_slice();`,
+    `let payload = wasmrs_guest::serialize(&input).map(|bytes|Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())).unwrap();`,
+    `Host::default().request_stream(payload).map(|result| {result.map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?})`,
+  ]);
 
   return `
-pub(crate) fn ${name}(
-  inputs: ${name}::Inputs${lifetimeIn},
-) -> impl Stream<Item = Result<${name}::Outputs, PayloadError>> {
-//) -> wasmrs_guest::Flux<${name}::Outputs, PayloadError> {
-  let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
-  let payload = match wasmrs_guest::serialize(&inputs) {
-      Ok(bytes) => Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into()),
-      Err(_) => unreachable!(),
-  };
-  Host::default().request_stream(payload).map(|result| {
-      result
-          .map(|payload| Ok(deserialize::<${name}::Outputs>(&payload.data.unwrap())?))?
-  })
-}
+pub(crate) ${fn}
 
-pub(crate) mod ${name} {
+pub(crate) mod ${$op.lcName} {
   use super::*;
 
   #[derive(serde::Serialize, serde::Deserialize)]
-  pub struct Inputs${lifetime} {
+  pub struct ${$op.inputTypeName} {
     ${inputFields}
   }
 
-  pub(crate) type Outputs = ${convertType((op.type as Stream).type, config)};
+  pub(crate) type ${$op.outputTypeName} = ${$op.outputType};
 }
 `;
 }
@@ -208,89 +199,74 @@ function gen_request_channel(
   interfaceName: string,
   config: ObjectMap,
 ): string {
-  const name = rustify(op.name);
-  const indexConstant = constantCase(`${interfaceName}_${name}`);
+  const $op = operationDecisions(op, interfaceName, config);
 
   const inputFields = op.parameters
-    .map((p) => {
-      return `
-  pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
-  `;
-    })
+    .map((p) =>
+      `pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},`
+    )
     .join("\n");
 
   const inputFirst = op.parameters.filter(nonStream)
-    .map((p) => {
-      return `
-      pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},
-  `;
-    })
+    .map((p) =>
+      `pub(crate) ${rustify(p.name)}: ${convertType(p.type, config)},`
+    )
     .join("\n");
 
-  const lifetime = op.parameters.length > 0 ? "" : "";
-  const lifetimeIn = op.parameters.length > 0 ? "" : "";
+  const initialParams = op.parameters.filter(nonStream).map((p) =>
+    `${rustify(p.name)}: input.${rustify(p.name)},`
+  ).join("");
+
+  const inputStreamVariants = op.parameters.filter(stream).map((p) =>
+    `${rustifyCaps(p.name)}(${convertType((p.type as Stream).type, config)}),`
+  ).join("");
+
+  const inputStreamHandlers = op.parameters.filter(stream).map((p) => `
+  let tx_inner = tx.clone();
+  ${
+    Spawn(
+      While(`let Some(payload) = input.${rustify(p.name)}.next().await`).Do([
+        `let payload = ${
+          Match(`payload`).Cases({
+            err: "let _ = tx_inner.error(e); continue;",
+          })
+        };`,
+        `let message = OpInputs::${rustifyCaps(p.name)}(payload);`,
+        `let payload = wasmrs_guest::serialize(&message).map(|b| Payload::new_data(None, Some(b.into()))).map_err(|e|PayloadError::application_error(e.to_string()));`,
+        `let _ = tx_inner.send_result(payload);`,
+      ]),
+    )
+  }
+  `).join("\n");
+
+  const fn = Fn($op.lcName).Args(`mut input: ${$op.genericInputType}`).Type(
+    `impl Stream<Item = Result<${$op.genericOutputType}, PayloadError>>`,
+  ).Body([
+    `let op_id_bytes = ${$op.indexConstant}_INDEX_BYTES.as_slice();`,
+    `let (tx, rx) = Flux::new_channels();`,
+    `#[derive(serde::Serialize, serde::Deserialize)]`,
+    `#[serde(untagged)]`,
+    `enum OpInputs { Params(${$op.lcName}::InputFirst), ${inputStreamVariants} }`,
+    `let first = OpInputs::Params(${$op.lcName}::InputFirst { ${initialParams} });`,
+    inputStreamHandlers,
+    `let payload = wasmrs_guest::serialize(&first)`,
+    `  .map(|b| Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), b.into()))`,
+    `  .map_err(|e|PayloadError::application_error(e.to_string()));`,
+    `let _ = tx.send_result(payload);`,
+    ``,
+    `Host::default().request_channel(rx).map(|result| {`,
+    `    result`,
+    `        .map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?`,
+    `})`,
+  ]);
 
   return `
-pub(crate) fn ${name}(
-  mut inputs: ${name}::Inputs${lifetimeIn},
-) -> impl Stream<Item = Result<${name}::Outputs, PayloadError>> {
-//) -> wasmrs_guest::Flux<${name}::Outputs, PayloadError> {
-  let op_id_bytes = ${indexConstant}_INDEX_BYTES.as_slice();
+pub(crate) ${fn}
 
-  let (tx, rx) = Flux::new_channels();
-
-  #[derive(serde::Serialize, serde::Deserialize)]
-  #[serde(untagged)]
-  enum OpInputs {
-    Params(${name}::InputFirst),
-    ${
-    op.parameters.filter(stream).map((p) =>
-      `${rustifyCaps(p.name)}(${convertType((p.type as Stream).type, config)}),`
-    )
-  }
-  }
-
-  let first = OpInputs::Params(${name}::InputFirst {
-    ${
-    op.parameters.filter(nonStream).map((p) =>
-      `${rustify(p.name)}: inputs.${rustify(p.name)},`
-    )
-  }
-  });
-
-  ${
-    op.parameters.filter(stream).map((p) => `
-  let tx_inner = tx.clone();
-  spawn(async move {
-    while let Some(payload) = inputs.${rustify(p.name)}.next().await {
-      if let Err(e) = payload {
-        tx_inner.error(e);
-        continue;
-      }
-      let payload = payload.unwrap();
-      let message = OpInputs::${rustifyCaps(p.name)}(payload);
-      let payload = wasmrs_guest::serialize(&message).map(|b| Payload::new_data(None, Some(b.into()))).map_err(|e|PayloadError::application_error(e.to_string()));
-      let _ = tx_inner.send_result(payload);
-    }
-  });
-  `)
-  }
-
-  let payload = wasmrs_guest::serialize(&first)
-    .map(|b| Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), b.into()))
-    .map_err(|e|PayloadError::application_error(e.to_string()));
-  tx.send_result(payload);
-
-  Host::default().request_channel(rx).map(|result| {
-      result
-          .map(|payload| Ok(deserialize::<${name}::Outputs>(&payload.data.unwrap())?))?
-  })
-}
-
-pub(crate) mod ${name} {
+pub(crate) mod ${$op.lcName} {
   use super::*;
 
-  pub struct Inputs${lifetime} {
+  pub struct ${$op.inputTypeName} {
     ${inputFields}
   }
 
@@ -299,7 +275,7 @@ pub(crate) mod ${name} {
     ${inputFirst}
   }
 
-  pub(crate) type Outputs = ${convertType(op.type, config)};
+  pub(crate) type ${$op.outputTypeName} = ${$op.outputType};
 }
 `;
 }

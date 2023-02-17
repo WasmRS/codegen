@@ -3764,22 +3764,16 @@ impl MyServiceComponent {
             ) -> Result<my_service_service::empty_void::Input, Error> {
                 unreachable!()
             }
-            let _ = MyServiceComponent::empty_void(match des(input_payload) {
-                Ok(o) => o,
-                Err(e) => {
-                    let _ = tx.send(Err(PayloadError::application_error(e.to_string())));
-                    return;
-                }
-            })
-            .await
-            .map(|result| {
-                serialize(&result)
-                    .map(|b| Payload::new_data(None, Some(b.into())))
-                    .map_err(|e| PayloadError::application_error(e.to_string()))
-            })
-            .map(|output| {
-                let _ = tx.send(output);
-            });
+            let _ = MyServiceComponent::empty_void(my_service_service::empty_void::Input {})
+                .await
+                .map(|result| {
+                    serialize(&result)
+                        .map(|b| Payload::new_data(None, Some(b.into())))
+                        .map_err(|e| PayloadError::application_error(e.to_string()))
+                })
+                .map(|output| {
+                    let _ = tx.send(output);
+                });
         });
         Ok(Mono::from_future(async move { rx.await? }))
     }
