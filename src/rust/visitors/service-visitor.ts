@@ -131,7 +131,7 @@ function paramDeserializer(p: Parameter, config: ObjectMap): string {
         `map.remove("${p.name}")
     .ok_or_else(|| wasmrs_guest::Error::MissingInput("${p.name}".to_owned()))?`,
       )
-    }.map_err(|e| wasmrs_guest::Error::Decode(e.to_string()))?`;
+    }.map_err(|e| wasmrs_guest::Error::Codec(e.to_string()))?`;
   }
 }
 
@@ -144,7 +144,7 @@ function propertyParamDeserializer(
 }
 
 function serializePayload(id: string) {
-  return `serialize(&${id}).map(|b| Payload::new_data(None, Some(b.into()))).map_err(|e| PayloadError::application_error(e.to_string()))`;
+  return `serialize(&${id}).map(|b| RawPayload::new_data(None, Some(b.into()))).map_err(|e| PayloadError::application_error(e.to_string(), None))`;
 }
 
 export function convertOperation(
@@ -210,7 +210,7 @@ export function convertOperation(
               op.parameters.length > 0
                 ? Match(Call("des").With("input_payload")).Error(
                   [
-                    "let _ = tx.send(Err(PayloadError::application_error(e.to_string())));",
+                    "let _ = tx.send(Err(PayloadError::application_error(e.to_string(), None)));",
                     "return;",
                   ],
                 )
@@ -220,7 +220,7 @@ export function convertOperation(
               serializePayload("result")
             }).map(|output| {let _ = tx.send(output);});`,
           ]),
-          "Ok(Mono::from_future(async move { rx.await? }))",
+          "Ok(Mono::from_future(async move { rx.await.map_err(|e| PayloadError::application_error(e.to_string(), None))? }))",
         ],
       );
   } else if ($op.variant === ActionKind.RequestStream) {
@@ -236,7 +236,7 @@ export function convertOperation(
     ).Args("input: IncomingMono").Type(`Result<OutgoingStream, GenericError>`)
       .Body(
         [
-          "let (out_tx, out_rx) = Flux::new_channels();",
+          "let (out_tx, out_rx) = FluxChannel::new_parts();",
           "let input = deserialize_helper(input);",
           Spawn([
             `let input_payload = ${
@@ -245,7 +245,7 @@ export function convertOperation(
             simpleInputDeserializer,
             `let input = ${
               Match("des(input_payload)").Error(
-                `let _ = out_tx.error(PayloadError::application_error(e.to_string()));return;`,
+                `let _ = out_tx.error(PayloadError::application_error(e.to_string(), None));return;`,
               )
             };`,
             Match(`${$op.actionPath}(input).await`).Cases({
@@ -264,7 +264,7 @@ export function convertOperation(
                 "out_tx.complete();",
               ],
               "Err(e)":
-                "let _ = out_tx.error(PayloadError::application_error(e.to_string()));",
+                "let _ = out_tx.error(PayloadError::application_error(e.to_string(), None));",
             }),
           ]),
           "Ok(out_rx)",
@@ -282,7 +282,7 @@ export function convertOperation(
     let deserializeHelper;
     if (streamingParams.length > 0) {
       deserializeHelper =
-        `move |payload: ParsedPayload| -> Result<${$op.qualifiedInputType}, Error> {
+        `move |payload: Payload| -> Result<${$op.qualifiedInputType}, Error> {
       let mut map = deserialize_generic(&payload.data)?;
         let input = ${inputBuilder};
 
@@ -294,7 +294,7 @@ export function convertOperation(
                   convertType((p.type as Stream).type, config),
                   "v",
                 )
-              }.map_err(|e| PayloadError::application_error(e.to_string())));`,
+              }.map_err(|e| PayloadError::application_error(e.to_string(), None)));`,
             )
           ).join("\n")
         }
@@ -302,7 +302,7 @@ export function convertOperation(
     }`;
     } else {
       deserializeHelper =
-        `move |payload: ParsedPayload| -> Result<${$op.qualifiedInputType}, Error> {unreachable!()}`;
+        `move |payload: Payload| -> Result<${$op.qualifiedInputType}, Error> {unreachable!()}`;
     }
 
     const inputStreams = op.parameters.filter(stream).flatMap((
@@ -311,7 +311,7 @@ export function convertOperation(
       Let([
         `real_${rustify(p.name, true)}_tx`,
         `real_${rustify(p.name, true)}_rx`,
-      ]).Equal("Flux::new_channels();"),
+      ]).Equal("FluxChannel::new_parts();"),
       Let(`${rustify(p.name, true)}_inner_tx`).Equal(
         `real_${rustify(p.name, true)}_tx.clone();`,
       ),
@@ -325,7 +325,7 @@ export function convertOperation(
         return If(`let Some(a) = payload.remove("${p.name}")`).Then(
           `let _ = real_${rustify(p.name, true)}_tx.send_result(${
             callAsDeserialize(convertType(t.type, config), "a")
-          }.map_err(|e| PayloadError::application_error(e.to_string())),
+          }.map_err(|e| PayloadError::application_error(e.to_string(), None)),
         );`,
         );
       };
@@ -343,7 +343,7 @@ export function convertOperation(
       `Result<OutgoingStream, GenericError>`,
     ).Body(
       [
-        "let (real_out_tx, real_out_rx) = Flux::new_channels();",
+        "let (real_out_tx, real_out_rx) = FluxChannel::new_parts();",
         inputStreams,
         Spawn([
           `let des = ${deserializeHelper};`,
@@ -366,14 +366,14 @@ export function convertOperation(
                 ),
               ),
               Match("des(first)").Error([
-                "let _ = real_out_tx.error(PayloadError::application_error(e.to_string()));",
+                "let _ = real_out_tx.error(PayloadError::application_error(e.to_string(), None));",
                 "return",
               ]),
             ]).Else(`return;`)
           };`,
           Match(`${$op.actionPath}(input_map).await`).Cases({
             "Err(e)": [
-              "let _ = real_out_tx.error(PayloadError::application_error(e.to_string()));",
+              "let _ = real_out_tx.error(PayloadError::application_error(e.to_string(), None));",
               "return",
             ],
             "Ok(mut result)": [

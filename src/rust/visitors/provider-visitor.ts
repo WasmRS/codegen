@@ -128,9 +128,9 @@ function gen_request_response(
     `let payload = ${
       Match(`wasmrs_guest::serialize(&input)`).Cases({
         "Ok(bytes)":
-          "Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())",
+          "RawPayload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())",
         "Err(e)":
-          "return Mono::new_error(PayloadError::application_error(e.to_string()))",
+          "return Mono::new_error(PayloadError::application_error(e.to_string(), None))",
       })
     };`,
     `let fut = wasmrs_guest::FutureExt::map(Host::default().request_response(payload), |result| {
@@ -174,7 +174,7 @@ function gen_request_stream(
     `impl Stream<Item = Result<${$op.genericOutputType}, PayloadError>>`,
   ).Body([
     `let op_id_bytes = ${$op.indexConstant}_INDEX_BYTES.as_slice();`,
-    `let payload = wasmrs_guest::serialize(&input).map(|bytes|Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())).unwrap();`,
+    `let payload = wasmrs_guest::serialize(&input).map(|bytes|RawPayload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), bytes.into())).unwrap();`,
     `Host::default().request_stream(payload).map(|result| {result.map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?})`,
   ]);
 
@@ -232,7 +232,7 @@ function gen_request_channel(
           })
         };`,
         `let message = OpInputs::${rustifyCaps(p.name)}(payload);`,
-        `let payload = wasmrs_guest::serialize(&message).map(|b| Payload::new_data(None, Some(b.into()))).map_err(|e|PayloadError::application_error(e.to_string()));`,
+        `let payload = wasmrs_guest::serialize(&message).map(|b| RawPayload::new_data(None, Some(b.into()))).map_err(|e|PayloadError::application_error(e.to_string(), None));`,
         `let _ = tx_inner.send_result(payload);`,
       ]),
     )
@@ -243,18 +243,18 @@ function gen_request_channel(
     `impl Stream<Item = Result<${$op.genericOutputType}, PayloadError>>`,
   ).Body([
     `let op_id_bytes = ${$op.indexConstant}_INDEX_BYTES.as_slice();`,
-    `let (tx, rx) = Flux::new_channels();`,
+    `let (tx, rx) = FluxChannel::new_parts();`,
     `#[derive(serde::Serialize, serde::Deserialize)]`,
     `#[serde(untagged)]`,
     `enum OpInputs { Params(${$op.lcName}::InputFirst), ${inputStreamVariants} }`,
     `let first = OpInputs::Params(${$op.lcName}::InputFirst { ${initialParams} });`,
     inputStreamHandlers,
     `let payload = wasmrs_guest::serialize(&first)`,
-    `  .map(|b| Payload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), b.into()))`,
-    `  .map_err(|e|PayloadError::application_error(e.to_string()));`,
+    `  .map(|b| RawPayload::new([op_id_bytes, &[0, 0, 0, 0]].concat().into(), b.into()))`,
+    `  .map_err(|e|PayloadError::application_error(e.to_string(), None));`,
     `let _ = tx.send_result(payload);`,
     ``,
-    `Host::default().request_channel(rx).map(|result| {`,
+    `Host::default().request_channel(Box::new(rx)).map(|result| {`,
     `    result`,
     `        .map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?`,
     `})`,

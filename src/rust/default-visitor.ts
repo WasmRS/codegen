@@ -48,15 +48,15 @@ extern "C" fn __wasmrs_init(
 }
 
 fn deserialize_helper(
-  i: Mono<ParsedPayload, PayloadError>,
+  i: Mono<Payload, PayloadError>,
 ) -> Mono<std::collections::BTreeMap<String, wasmrs_guest::Value>, PayloadError> {
   Mono::from_future(async move {
     match i.await {
       Ok(bytes) => match deserialize(&bytes.data) {
         Ok(v) => Ok(v),
-        Err(e) => Err(PayloadError::application_error(e.to_string())),
+        Err(e) => Err(PayloadError::application_error(e.to_string(), None)),
       },
-      Err(e) => Err(PayloadError::application_error(e.to_string())),
+      Err(e) => Err(PayloadError::application_error(e.to_string(), None)),
     }
   })
 }
