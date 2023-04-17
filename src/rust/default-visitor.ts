@@ -48,7 +48,7 @@ extern "C" fn __wasmrs_init(
 }
 
 fn deserialize_helper(
-  i: Mono<Payload, PayloadError>,
+  i: BoxMono<Payload, PayloadError>,
 ) -> Mono<std::collections::BTreeMap<String, wasmrs_guest::Value>, PayloadError> {
   Mono::from_future(async move {
     match i.await {
@@ -167,11 +167,11 @@ function writeExport(
 
     return `
     wasmrs_guest::register_${variant}(
-      "${ns}.${iface}","${op}",${
+      "${ns}.${iface}","${op}",Box::new(${
       utils.rustifyCaps(
         `${iface}Component`,
       )
-    }::${utils.rustify(op)}_wrapper,
+    }::${utils.rustify(op)}_wrapper),
     );`;
   };
 }

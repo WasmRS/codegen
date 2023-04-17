@@ -136,7 +136,7 @@ function gen_request_response(
     `let fut = wasmrs_guest::FutureExt::map(Host::default().request_response(payload), |result| {
       result.map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?
     });`,
-    `Mono::from_future(fut)`,
+    `Mono::from_future(fut).boxed()`,
   ]);
 
   return `
@@ -254,7 +254,7 @@ function gen_request_channel(
     `  .map_err(|e|PayloadError::application_error(e.to_string(), None));`,
     `let _ = tx.send_result(payload);`,
     ``,
-    `Host::default().request_channel(Box::new(rx)).map(|result| {`,
+    `Host::default().request_channel(Box::pin(rx)).map(|result| {`,
     `    result`,
     `        .map(|payload| Ok(deserialize::<${$op.genericOutputType}>(&payload.data.unwrap())?))?`,
     `})`,

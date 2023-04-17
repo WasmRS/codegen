@@ -220,7 +220,7 @@ export function convertOperation(
               serializePayload("result")
             }).map(|output| {let _ = tx.send(output);});`,
           ]),
-          "Ok(Mono::from_future(async move { rx.await.map_err(|e| PayloadError::application_error(e.to_string(), None))? }))",
+          "Ok(Mono::from_future(async move { rx.await.map_err(|e| PayloadError::application_error(e.to_string(), None))? }).boxed())",
         ],
       );
   } else if ($op.variant === ActionKind.RequestStream) {
@@ -267,7 +267,7 @@ export function convertOperation(
                 "let _ = out_tx.error(PayloadError::application_error(e.to_string(), None));",
             }),
           ]),
-          "Ok(out_rx)",
+          "Ok(out_rx.boxed())",
         ],
       );
   } else if ($op.variant === ActionKind.RequestChannel) {
@@ -339,7 +339,7 @@ export function convertOperation(
     });
     wrapper = Fn(
       `${$op.lcName}_wrapper`,
-    ).Args(["input: IncomingStream"]).Type(
+    ).Args(["mut input: IncomingStream"]).Type(
       `Result<OutgoingStream, GenericError>`,
     ).Body(
       [
@@ -349,12 +349,12 @@ export function convertOperation(
           `let des = ${deserializeHelper};`,
           `let input_map = ${
             If(
-              "let Ok(Some(Ok(first))) = input.recv().await",
+              "let Ok(Some(first)) = input.try_next().await",
             ).Then([
               // spawn a task to handle subsequent payloads on the input streams
               Spawn(
                 While(
-                  `let Ok(Some(Ok(payload))) = input.recv().await`,
+                  `let Ok(Some(payload)) = input.try_next().await`,
                 ).Do(
                   If(
                     "let Ok(mut payload) = deserialize_generic(&payload.data)",
@@ -387,7 +387,7 @@ export function convertOperation(
             ],
           }),
         ]),
-        "Ok(real_out_rx)",
+        "Ok(real_out_rx.boxed())",
       ],
     );
   } else {
